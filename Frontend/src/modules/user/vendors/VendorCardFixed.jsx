@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import Icon from '../../../components/ui/Icon';
@@ -6,11 +6,38 @@ import { useTheme } from '../../../hooks/useTheme';
 import { useCart } from '../../../contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 
-const VendorCard = ({ vendor, layout = 'vertical' }) => {
+const VendorCard = ({ vendor, layout = 'vertical', onToggleSave }) => {
   const { theme } = useTheme();
   const { addToCart, isInCart } = useCart();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const navigate = useNavigate();
+
+  // Check if vendor is saved
+  useEffect(() => {
+    const savedVendors = JSON.parse(localStorage.getItem('savedVendors') || '[]');
+    setIsSaved(savedVendors.includes(vendor.id));
+  }, [vendor.id]);
+
+  // Toggle save vendor
+  const toggleSave = () => {
+    const savedVendors = JSON.parse(localStorage.getItem('savedVendors') || '[]');
+    let updatedSavedVendors;
+    
+    if (isSaved) {
+      updatedSavedVendors = savedVendors.filter(id => id !== vendor.id);
+    } else {
+      updatedSavedVendors = [...savedVendors, vendor.id];
+    }
+    
+    setIsSaved(!isSaved);
+    localStorage.setItem('savedVendors', JSON.stringify(updatedSavedVendors));
+    
+    // Notify parent component
+    if (onToggleSave) {
+      onToggleSave(vendor.id);
+    }
+  };
 
   const handleWhatsAppContact = () => {
     const phoneNumber = vendor.phone || '919876543210';
@@ -157,6 +184,23 @@ const VendorCard = ({ vendor, layout = 'vertical' }) => {
 
             {/* Action Buttons */}
             <div className="flex gap-2 pt-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleSave();
+                }}
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  isSaved ? 'opacity-80' : 'hover:scale-105'
+                }`}
+                style={{
+                  backgroundColor: isSaved ? theme.colors.accent[500] : theme.semantic.background.accent,
+                  color: isSaved ? 'white' : theme.semantic.text.primary,
+                  border: `1px solid ${isSaved ? theme.colors.accent[500] : theme.semantic.border.light}`
+                }}
+                title={isSaved ? 'Remove from saved' : 'Save vendor'}
+              >
+                <Icon name="heart" size="sm" />
+              </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();

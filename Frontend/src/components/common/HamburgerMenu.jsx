@@ -17,10 +17,10 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
     if (isOpen) {
       // Store original overflow
       const originalOverflow = document.body.style.overflow;
-      
+
       // Lock background scroll
       document.body.style.overflow = 'hidden';
-      
+
       // Cleanup function
       return () => {
         document.body.style.overflow = originalOverflow;
@@ -119,16 +119,15 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
   return (
     <>
       {/* Backdrop - Higher z-index than checkout content */}
-      <div 
-        className={`hamburger-menu-backdrop ${
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
+      <div
+        className={`hamburger-menu-backdrop ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
         onClick={onClose}
         aria-hidden="true"
       />
-      
+
       {/* Menu Panel - Highest z-index */}
-      <div 
+      <div
         className={`hamburger-menu-panel ${isOpen ? 'open' : ''}`}
         style={{
           backgroundColor: theme.semantic.background.primary
@@ -138,14 +137,14 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
         aria-labelledby="menu-title"
       >
         {/* Fixed Header - Always visible at top */}
-        <div 
+        <div
           className="hamburger-menu-header"
           style={{
             backgroundColor: theme.semantic.background.primary,
             borderBottomColor: theme.semantic.border.light
           }}
         >
-          <h2 
+          <h2
             id="menu-title"
             className="text-lg font-bold"
             style={{ color: theme.semantic.text.primary }}
@@ -161,10 +160,10 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
               focusRingColor: theme.colors.primary[500]
             }}
             onMouseEnter={(e) => {
-              e.target.style.backgroundColor = theme.semantic.background.accent;
+              e.currentTarget.style.backgroundColor = theme.semantic.background.accent;
             }}
             onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
+              e.currentTarget.style.backgroundColor = 'transparent';
             }}
             aria-label="Close menu"
           >
@@ -177,7 +176,7 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
           <div className="hamburger-menu-sections">
             {/* Section 1: User Info */}
             {isAuthenticated && (
-              <div 
+              <div
                 className="p-4 rounded-xl"
                 style={{ backgroundColor: theme.semantic.background.accent }}
               >
@@ -193,13 +192,13 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 
+                    <h3
                       className="font-semibold text-sm"
                       style={{ color: theme.semantic.text.primary }}
                     >
                       {user.name}
                     </h3>
-                    <p 
+                    <p
                       className="text-xs"
                       style={{ color: theme.semantic.text.secondary }}
                     >
@@ -223,9 +222,9 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
 
             {/* Section 2: Chats */}
             <div>
-              <div 
+              <div
                 className="flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors focus:outline-none focus:ring-2"
-                style={{ 
+                style={{
                   backgroundColor: theme.semantic.background.accent,
                   focusRingColor: theme.colors.primary[500]
                 }}
@@ -239,20 +238,20 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
                 }}
               >
                 <div className="flex items-center space-x-3">
-                  <div 
+                  <div
                     className="w-10 h-10 rounded-full flex items-center justify-center"
                     style={{ backgroundColor: theme.colors.primary[100] }}
                   >
                     <Icon name="chat" size="sm" style={{ color: theme.colors.primary[600] }} />
                   </div>
                   <div>
-                    <h3 
+                    <h3
                       className="font-medium text-sm"
                       style={{ color: theme.semantic.text.primary }}
                     >
                       My Chats
                     </h3>
-                    <p 
+                    <p
                       className="text-xs"
                       style={{ color: theme.semantic.text.secondary }}
                     >
@@ -262,7 +261,7 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
                 </div>
                 <div className="flex items-center space-x-2">
                   {cartVendors.filter(v => v.unread).length > 0 && (
-                    <div 
+                    <div
                       className="w-5 h-5 rounded-full flex items-center justify-center"
                       style={{ backgroundColor: theme.colors.accent[500] }}
                     >
@@ -278,7 +277,7 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
 
             {/* Section 3: Quick Access */}
             <div>
-              <h3 
+              <h3
                 className="text-sm font-semibold mb-3"
                 style={{ color: theme.semantic.text.primary }}
               >
@@ -295,20 +294,20 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
                     key={index}
                     onClick={() => handleNavigation(item.path)}
                     className="w-full flex items-center justify-between p-3 rounded-lg transition-colors text-left focus:outline-none focus:ring-2"
-                    style={{ 
+                    style={{
                       backgroundColor: 'transparent',
                       focusRingColor: theme.colors.primary[500]
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = theme.semantic.background.accent;
+                      e.currentTarget.style.backgroundColor = theme.semantic.background.accent;
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.backgroundColor = 'transparent';
                     }}
                   >
                     <div className="flex items-center space-x-3">
                       <Icon name={item.icon} size="sm" style={{ color: theme.semantic.text.secondary }} />
-                      <span 
+                      <span
                         className="text-sm"
                         style={{ color: theme.semantic.text.primary }}
                       >
@@ -317,9 +316,9 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
                     </div>
                     <div className="flex items-center space-x-2">
                       {item.count > 0 && (
-                        <span 
+                        <span
                           className="text-xs px-2 py-1 rounded-full"
-                          style={{ 
+                          style={{
                             backgroundColor: theme.colors.primary[100],
                             color: theme.colors.primary[600]
                           }}
@@ -340,28 +339,28 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
                 <button
                   onClick={() => toggleSection(section.id)}
                   className="w-full flex items-center justify-between p-3 rounded-lg transition-colors text-left focus:outline-none focus:ring-2"
-                  style={{ 
+                  style={{
                     backgroundColor: theme.semantic.background.accent,
                     focusRingColor: theme.colors.primary[500]
                   }}
                 >
                   <div className="flex items-center space-x-3">
                     <Icon name={section.icon} size="sm" style={{ color: theme.colors.primary[600] }} />
-                    <span 
+                    <span
                       className="text-sm font-medium"
                       style={{ color: theme.semantic.text.primary }}
                     >
                       {section.title}
                     </span>
                   </div>
-                  <Icon 
-                    name="chevronDown" 
-                    size="sm" 
+                  <Icon
+                    name="chevronDown"
+                    size="sm"
                     className={`transition-transform ${expandedSections[section.id] ? 'rotate-180' : ''}`}
-                    style={{ color: theme.semantic.text.tertiary }} 
+                    style={{ color: theme.semantic.text.tertiary }}
                   />
                 </button>
-                
+
                 {expandedSections[section.id] && (
                   <div className="mt-2 ml-4 space-y-1">
                     {section.items.map((item, index) => (
@@ -369,19 +368,19 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
                         key={index}
                         onClick={() => handleNavigation(item.path)}
                         className="w-full flex items-center space-x-3 p-2 rounded-lg transition-colors text-left focus:outline-none focus:ring-2"
-                        style={{ 
+                        style={{
                           backgroundColor: 'transparent',
                           focusRingColor: theme.colors.primary[500]
                         }}
                         onMouseEnter={(e) => {
-                          e.target.style.backgroundColor = theme.semantic.background.accent;
+                          e.currentTarget.style.backgroundColor = theme.semantic.background.accent;
                         }}
                         onMouseLeave={(e) => {
-                          e.target.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.backgroundColor = 'transparent';
                         }}
                       >
                         <Icon name={item.icon} size="xs" style={{ color: theme.semantic.text.secondary }} />
-                        <span 
+                        <span
                           className="text-sm"
                           style={{ color: theme.semantic.text.primary }}
                         >
@@ -400,19 +399,19 @@ const HamburgerMenu = ({ isOpen, onClose }) => {
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center space-x-3 p-3 rounded-lg transition-colors text-left focus:outline-none focus:ring-2"
-                  style={{ 
+                  style={{
                     backgroundColor: 'transparent',
                     focusRingColor: theme.colors.accent[300]
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = theme.colors.accent[50];
+                    e.currentTarget.style.backgroundColor = theme.colors.accent[50];
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.backgroundColor = 'transparent';
                   }}
                 >
                   <Icon name="logout" size="sm" style={{ color: theme.colors.accent[500] }} />
-                  <span 
+                  <span
                     className="text-sm font-medium"
                     style={{ color: theme.colors.accent[500] }}
                   >

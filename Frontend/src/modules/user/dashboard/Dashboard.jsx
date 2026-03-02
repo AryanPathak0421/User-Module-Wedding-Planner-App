@@ -21,26 +21,26 @@ const Dashboard = () => {
       stats: '50+ Articles'
     },
     {
-      id: 'vendors',
-      title: 'Find Vendors',
-      subtitle: 'Discover top professionals',
-      icon: 'store',
-      route: '/user/vendors',
+      id: 'plan',
+      title: 'Plan',
+      subtitle: 'Plan your event',
+      icon: 'plan',
+      route: '/user/requirements',
       image: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400&h=300&fit=crop&q=80',
       gradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.75) 0%, rgba(251, 191, 36, 0.75) 100%)',
       shadowColor: 'rgba(245, 158, 11, 0.4)',
-      stats: '500+ Vendors'
+      stats: 'Event Planning'
     },
     {
-      id: 'checklist',
-      title: 'My Checklist',
-      subtitle: 'Track your progress',
-      icon: 'checkList',
-      route: '/user/tools/checklist',
+      id: 'horoscope',
+      title: 'Horoscope',
+      subtitle: 'Check your horoscope',
+      icon: 'star',
+      route: '/user/horoscope',
       image: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400&h=300&fit=crop&q=80',
       gradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.75) 0%, rgba(52, 211, 153, 0.75) 100%)',
       shadowColor: 'rgba(16, 185, 129, 0.4)',
-      stats: '12 Tasks Pending'
+      stats: 'Daily Predictions'
     },
     {
       id: 'home',
@@ -56,6 +56,25 @@ const Dashboard = () => {
   ];
 
   const handleCardClick = (option) => {
+    if (option.id === 'plan') {
+      const saved = localStorage.getItem('eventDetails');
+      let hasRequirements = false;
+      try {
+        if (saved && saved !== 'null' && saved !== 'undefined') {
+          const parsed = JSON.parse(saved);
+          hasRequirements = parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0;
+        }
+      } catch (e) {
+        hasRequirements = false;
+      }
+
+      if (hasRequirements) {
+        navigate('/user/planning-dashboard');
+      } else {
+        navigate('/user/requirements');
+      }
+      return;
+    }
     navigate(option.route);
   };
 
@@ -70,7 +89,7 @@ const Dashboard = () => {
   const userName = user?.name?.split(' ')[0] || 'There';
 
   return (
-    <div 
+    <div
       className="min-h-screen px-4 py-8"
       style={{ backgroundColor: theme.semantic.background.secondary }}
     >
@@ -79,28 +98,28 @@ const Dashboard = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 
+              <h1
                 className="text-3xl font-bold mb-1"
                 style={{ color: theme.semantic.text.primary }}
               >
                 {getGreeting()}, {userName}! 👋
               </h1>
-              <p 
+              <p
                 className="text-sm"
                 style={{ color: theme.semantic.text.secondary }}
               >
-                Let's make your wedding planning easier
+                Let's make your event planning easier
               </p>
             </div>
             <button
               onClick={() => navigate('/user/account')}
               className="w-12 h-12 rounded-full overflow-hidden border-2 transition-transform hover:scale-105"
-              style={{ 
+              style={{
                 borderColor: theme.colors.primary[500],
                 backgroundColor: theme.semantic.background.primary
               }}
             >
-              <div 
+              <div
                 className="w-full h-full flex items-center justify-center"
                 style={{ backgroundColor: theme.colors.primary[100] }}
               >
@@ -110,21 +129,21 @@ const Dashboard = () => {
           </div>
 
           {/* Quick Stats Bar */}
-          <div 
+          <div
             className="grid grid-cols-3 gap-3 p-4 rounded-xl"
-            style={{ 
+            style={{
               backgroundColor: theme.semantic.background.primary,
               border: `1px solid ${theme.semantic.border.primary}`
             }}
           >
             <div className="text-center">
-              <div 
+              <div
                 className="text-2xl font-bold"
                 style={{ color: theme.colors.primary[500] }}
               >
                 12
               </div>
-              <div 
+              <div
                 className="text-xs"
                 style={{ color: theme.semantic.text.secondary }}
               >
@@ -132,13 +151,13 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="text-center border-l border-r" style={{ borderColor: theme.semantic.border.primary }}>
-              <div 
+              <div
                 className="text-2xl font-bold"
                 style={{ color: theme.colors.secondary[500] }}
               >
                 8
               </div>
-              <div 
+              <div
                 className="text-xs"
                 style={{ color: theme.semantic.text.secondary }}
               >
@@ -146,13 +165,13 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="text-center">
-              <div 
+              <div
                 className="text-2xl font-bold"
                 style={{ color: theme.colors.accent[500] }}
               >
                 45
               </div>
-              <div 
+              <div
                 className="text-xs"
                 style={{ color: theme.semantic.text.secondary }}
               >
@@ -195,14 +214,14 @@ const Dashboard = () => {
                   }}
                 />
                 {/* Gradient overlay - lighter for better image visibility */}
-                <div 
+                <div
                   className="absolute inset-0"
                   style={{ background: option.gradient }}
                 />
                 {/* Bottom gradient for text readability (Swiggy style) */}
-                <div 
+                <div
                   className="absolute inset-0"
-                  style={{ 
+                  style={{
                     background: 'linear-gradient(to bottom, transparent 0%, transparent 40%, rgba(0, 0, 0, 0.4) 100%)'
                   }}
                 />
@@ -212,9 +231,9 @@ const Dashboard = () => {
               <div className="relative z-10 p-4 h-full flex flex-col justify-between">
                 {/* Top Section - Icon */}
                 <div className="flex items-start justify-between">
-                  <div 
+                  <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ 
+                    style={{
                       backgroundColor: 'rgba(255, 255, 255, 0.3)',
                       backdropFilter: 'blur(10px)',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
@@ -229,18 +248,18 @@ const Dashboard = () => {
                   <h3 className="text-base font-bold text-white mb-0.5" style={{ textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)' }}>
                     {option.title}
                   </h3>
-                  <p 
+                  <p
                     className="text-xs mb-2"
-                    style={{ 
+                    style={{
                       color: 'rgba(255, 255, 255, 0.95)',
                       textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
                     }}
                   >
                     {option.subtitle}
                   </p>
-                  <div 
+                  <div
                     className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                    style={{ 
+                    style={{
                       backgroundColor: 'rgba(255, 255, 255, 0.3)',
                       backdropFilter: 'blur(10px)',
                       color: 'white',
@@ -255,42 +274,41 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Quick Actions Section */}
-        <div 
+        {/* My Work Section */}
+        <div
           className="p-4 rounded-xl"
-          style={{ 
+          style={{
             backgroundColor: theme.semantic.background.primary,
             border: `1px solid ${theme.semantic.border.primary}`
           }}
         >
-          <h3 
+          <h3
             className="text-sm font-semibold mb-3"
             style={{ color: theme.semantic.text.primary }}
           >
-            Quick Actions
+            My Work
           </h3>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             {[
               { icon: 'search', label: 'Search', route: '/user/search' },
               { icon: 'heart', label: 'Favorites', route: '/user/favourites' },
-              { icon: 'cart', label: 'Cart', route: '/user/cart' },
-              { icon: 'chat', label: 'Chats', route: '/user/chats' }
+              { icon: 'settings', label: 'Settings', route: '/user/account' }
             ].map((action) => (
               <button
                 key={action.label}
                 onClick={() => navigate(action.route)}
                 className="flex flex-col items-center gap-2 p-3 rounded-xl transition-all hover:scale-105"
-                style={{ 
+                style={{
                   backgroundColor: theme.semantic.background.secondary
                 }}
               >
-                <div 
+                <div
                   className="w-10 h-10 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: theme.colors.primary[100] }}
                 >
                   <Icon name={action.icon} size="md" style={{ color: theme.colors.primary[500] }} />
                 </div>
-                <span 
+                <span
                   className="text-xs font-medium"
                   style={{ color: theme.semantic.text.secondary }}
                 >
@@ -303,7 +321,7 @@ const Dashboard = () => {
 
         {/* Footer Inspiration */}
         <div className="text-center mt-6">
-          <p 
+          <p
             className="text-xs italic"
             style={{ color: theme.semantic.text.tertiary }}
           >

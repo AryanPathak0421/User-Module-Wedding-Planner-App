@@ -8,7 +8,82 @@ import Input from '../../../components/ui/Input';
 const WeddingDetailsForm = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
-  
+
+  // Event categories configuration
+  const eventCategories = {
+    wedding: {
+      label: 'Wedding',
+      icon: 'rings',
+      fields: {
+        brideName: { label: "Bride's Name", type: 'text', required: true },
+        groomName: { label: "Groom's Name", type: 'text', required: true },
+        weddingDate: { label: 'Wedding Date', type: 'date', required: true },
+        venue: { label: 'Venue', type: 'text', required: true },
+        budget: { label: 'Total Budget', type: 'number', required: true, prefix: '₹' },
+        guestCount: { label: 'Guest Count', type: 'number', required: true },
+        weddingTheme: { label: 'Wedding Theme/Style', type: 'text', required: false },
+        specialRequirements: { label: 'Notes/Special Requirements', type: 'textarea', required: false }
+      }
+    },
+    birthday: {
+      label: 'Birthday',
+      icon: 'cake',
+      fields: {
+        personName: { label: "Birthday Person's Name", type: 'text', required: true },
+        age: { label: 'Age', type: 'number', required: true },
+        eventDate: { label: 'Birthday Date', type: 'date', required: true },
+        venue: { label: 'Venue', type: 'text', required: true },
+        budget: { label: 'Total Budget', type: 'number', required: true, prefix: '₹' },
+        guestCount: { label: 'Guest Count', type: 'number', required: true },
+        theme: { label: 'Party Theme', type: 'text', required: false },
+        specialRequirements: { label: 'Special Requirements', type: 'textarea', required: false }
+      }
+    },
+    anniversary: {
+      label: 'Anniversary',
+      icon: 'heart',
+      fields: {
+        coupleNames: { label: "Couple's Names", type: 'text', required: true },
+        years: { label: 'Years Celebrated', type: 'number', required: true },
+        eventDate: { label: 'Anniversary Date', type: 'date', required: true },
+        venue: { label: 'Venue', type: 'text', required: true },
+        budget: { label: 'Total Budget', type: 'number', required: true, prefix: '₹' },
+        guestCount: { label: 'Guest Count', type: 'number', required: true },
+        theme: { label: 'Celebration Theme', type: 'text', required: false },
+        specialRequirements: { label: 'Special Requirements', type: 'textarea', required: false }
+      }
+    },
+    corporate: {
+      label: 'Corporate Event',
+      icon: 'briefcase',
+      fields: {
+        companyName: { label: 'Company Name', type: 'text', required: true },
+        eventType: { label: 'Event Type', type: 'text', required: true },
+        eventDate: { label: 'Event Date', type: 'date', required: true },
+        venue: { label: 'Venue', type: 'text', required: true },
+        budget: { label: 'Total Budget', type: 'number', required: true, prefix: '₹' },
+        guestCount: { label: 'Expected Attendees', type: 'number', required: true },
+        purpose: { label: 'Event Purpose', type: 'text', required: false },
+        specialRequirements: { label: 'Special Requirements', type: 'textarea', required: false }
+      }
+    },
+    others: {
+      label: 'Others',
+      icon: 'sparkles',
+      fields: {
+        eventName: { label: 'Event Name', type: 'text', required: true },
+        organizerName: { label: 'Organizer Name', type: 'text', required: true },
+        eventDate: { label: 'Event Date', type: 'date', required: true },
+        venue: { label: 'Venue', type: 'text', required: true },
+        budget: { label: 'Total Budget', type: 'number', required: true, prefix: '₹' },
+        guestCount: { label: 'Expected Guests', type: 'number', required: true },
+        eventType: { label: 'Event Type/Category', type: 'text', required: false },
+        specialRequirements: { label: 'Special Requirements', type: 'textarea', required: false }
+      }
+    }
+  };
+
+  const [selectedCategory, setSelectedCategory] = useState('wedding');
   const [formData, setFormData] = useState({
     brideName: '',
     groomName: '',
@@ -21,6 +96,24 @@ const WeddingDetailsForm = () => {
   });
 
   const [errors, setErrors] = useState({});
+
+  // Initialize form data when category changes
+  const initializeFormData = (category) => {
+    const fields = eventCategories[category].fields;
+    const initialData = {};
+    Object.keys(fields).forEach(fieldKey => {
+      initialData[fieldKey] = '';
+    });
+    setFormData(initialData);
+    setErrors({});
+  };
+
+  // Handle category change
+  const handleCategoryChange = (e) => {
+    const newCategory = e.target.value;
+    setSelectedCategory(newCategory);
+    initializeFormData(newCategory);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,25 +131,14 @@ const WeddingDetailsForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!formData.brideName.trim()) {
-      newErrors.brideName = "Bride's name is required";
-    }
-    if (!formData.groomName.trim()) {
-      newErrors.groomName = "Groom's name is required";
-    }
-    if (!formData.weddingDate) {
-      newErrors.weddingDate = "Wedding date is required";
-    }
-    if (!formData.venue.trim()) {
-      newErrors.venue = "Venue is required";
-    }
-    if (!formData.budget) {
-      newErrors.budget = "Budget is required";
-    }
-    if (!formData.guestCount) {
-      newErrors.guestCount = "Guest count is required";
-    }
+    const fields = eventCategories[selectedCategory].fields;
+
+    Object.keys(fields).forEach(fieldKey => {
+      const field = fields[fieldKey];
+      if (field.required && !formData[fieldKey]?.trim()) {
+        newErrors[fieldKey] = `${field.label} is required`;
+      }
+    });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -64,11 +146,93 @@ const WeddingDetailsForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
-      localStorage.setItem('weddingDetails', JSON.stringify(formData));
-      navigate('/user/dashboard');
+      const eventData = {
+        category: selectedCategory,
+        categoryLabel: eventCategories[selectedCategory].label,
+        details: formData,
+        timestamp: new Date().toISOString()
+      };
+
+      // Save to localStorage
+      localStorage.setItem('eventDetails', JSON.stringify(eventData));
+
+      // Initialize planning categories based on event type
+      initializePlanningCategories(selectedCategory, formData);
+
+      // Initialize budget data
+      initializeBudgetData(formData);
+
+      // Navigate to planning dashboard
+      navigate('/user/planning-dashboard');
     }
+  };
+
+  // Initialize planning categories based on event type
+  const initializePlanningCategories = (eventType, formData) => {
+    const baseCategories = {
+      wedding: [
+        { name: 'Venue', status: 'Pending with Discussion', totalBudget: '₹1,00,000', advancePaid: null, balanceAmount: null, id: 'venue' },
+        { name: 'Catering', status: 'Pending with Discussion', totalBudget: '₹50,000', advancePaid: null, balanceAmount: null, id: 'catering' },
+        { name: 'Photography', status: 'Pending with Budget', totalBudget: '₹30,000', advancePaid: null, balanceAmount: null, id: 'photography' },
+        { name: 'Decoration', status: 'Pending with Discussion', totalBudget: '₹50,000', advancePaid: null, balanceAmount: null, id: 'decoration' },
+        { name: 'Makeup', status: 'Pending with Budget', totalBudget: '₹25,000', advancePaid: null, balanceAmount: null, id: 'makeup' },
+        { name: 'Invitations', status: 'Pending with Discussion', totalBudget: '₹15,000', advancePaid: null, balanceAmount: null, id: 'invitations' }
+      ],
+      birthday: [
+        { name: 'Venue', status: 'Pending with Discussion', totalBudget: '₹30,000', advancePaid: null, balanceAmount: null, id: 'venue' },
+        { name: 'Catering', status: 'Pending with Discussion', totalBudget: '₹20,000', advancePaid: null, balanceAmount: null, id: 'catering' },
+        { name: 'Photography', status: 'Pending with Budget', totalBudget: '₹15,000', advancePaid: null, balanceAmount: null, id: 'photography' },
+        { name: 'Decoration', status: 'Pending with Discussion', totalBudget: '₹10,000', advancePaid: null, balanceAmount: null, id: 'decoration' },
+        { name: 'Entertainment', status: 'Pending with Budget', totalBudget: '₹15,000', advancePaid: null, balanceAmount: null, id: 'entertainment' },
+        { name: 'Cake', status: 'Pending with Discussion', totalBudget: '₹5,000', advancePaid: null, balanceAmount: null, id: 'cake' }
+      ],
+      anniversary: [
+        { name: 'Venue', status: 'Pending with Discussion', totalBudget: '₹25,000', advancePaid: null, balanceAmount: null, id: 'venue' },
+        { name: 'Catering', status: 'Pending with Discussion', totalBudget: '₹15,000', advancePaid: null, balanceAmount: null, id: 'catering' },
+        { name: 'Photography', status: 'Pending with Budget', totalBudget: '₹10,000', advancePaid: null, balanceAmount: null, id: 'photography' },
+        { name: 'Decoration', status: 'Pending with Discussion', totalBudget: '₹8,000', advancePaid: null, balanceAmount: null, id: 'decoration' },
+        { name: 'Gifts', status: 'Pending with Budget', totalBudget: '₹12,000', advancePaid: null, balanceAmount: null, id: 'gifts' }
+      ],
+      corporate: [
+        { name: 'Venue', status: 'Pending with Discussion', totalBudget: '₹50,000', advancePaid: null, balanceAmount: null, id: 'venue' },
+        { name: 'Catering', status: 'Pending with Discussion', totalBudget: '₹30,000', advancePaid: null, balanceAmount: null, id: 'catering' },
+        { name: 'Audio/Visual', status: 'Pending with Budget', totalBudget: '₹20,000', advancePaid: null, balanceAmount: null, id: 'av' },
+        { name: 'Speakers', status: 'Pending with Discussion', totalBudget: '₹15,000', advancePaid: null, balanceAmount: null, id: 'speakers' },
+        { name: 'Marketing', status: 'Pending with Budget', totalBudget: '₹10,000', advancePaid: null, balanceAmount: null, id: 'marketing' }
+      ],
+      others: [
+        { name: 'Venue', status: 'Pending with Discussion', totalBudget: '₹20,000', advancePaid: null, balanceAmount: null, id: 'venue' },
+        { name: 'Catering', status: 'Pending with Discussion', totalBudget: '₹15,000', advancePaid: null, balanceAmount: null, id: 'catering' },
+        { name: 'Decoration', status: 'Pending with Budget', totalBudget: '₹10,000', advancePaid: null, balanceAmount: null, id: 'decoration' },
+        { name: 'Photography', status: 'Pending with Discussion', totalBudget: '₹8,000', advancePaid: null, balanceAmount: null, id: 'photography' }
+      ]
+    };
+
+    const categories = baseCategories[eventType] || baseCategories.others;
+    localStorage.setItem('planningCategories', JSON.stringify(categories));
+  };
+
+  // Initialize budget data based on form data
+  const initializeBudgetData = (formData) => {
+    const totalBudget = parseInt(formData.budget) || 500000;
+
+    const budgetData = {
+      totalBudget,
+      spentAmount: 0,
+      remainingAmount: totalBudget,
+      categories: [
+        { name: 'Venue', totalAmount: Math.floor(totalBudget * 0.4), advancePaid: 0, balanceAmount: Math.floor(totalBudget * 0.4), spent: 0, color: '#ec4899' },
+        { name: 'Catering', totalAmount: Math.floor(totalBudget * 0.25), advancePaid: 0, balanceAmount: Math.floor(totalBudget * 0.25), spent: 0, color: '#10b981' },
+        { name: 'Photography', totalAmount: Math.floor(totalBudget * 0.15), advancePaid: 0, balanceAmount: Math.floor(totalBudget * 0.15), spent: 0, color: '#f59e0b' },
+        { name: 'Decoration', totalAmount: Math.floor(totalBudget * 0.1), advancePaid: 0, balanceAmount: Math.floor(totalBudget * 0.1), spent: 0, color: '#8b5cf6' },
+        { name: 'Makeup', totalAmount: Math.floor(totalBudget * 0.05), advancePaid: 0, balanceAmount: Math.floor(totalBudget * 0.05), spent: 0, color: '#06b6d4' },
+        { name: 'Others', totalAmount: Math.floor(totalBudget * 0.05), advancePaid: 0, balanceAmount: Math.floor(totalBudget * 0.05), spent: 0, color: '#ef4444' }
+      ]
+    };
+
+    localStorage.setItem('budgetData', JSON.stringify(budgetData));
   };
 
   const handleSkip = () => {
@@ -76,243 +240,153 @@ const WeddingDetailsForm = () => {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen px-4 py-8 pb-24"
       style={{ backgroundColor: theme.semantic.background.secondary }}
     >
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div 
+          <div
             className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
             style={{ backgroundColor: theme.colors.primary[100] }}
           >
-            <Icon name="rings" size="2xl" style={{ color: theme.colors.primary[500] }} />
+            <Icon name={eventCategories[selectedCategory].icon} size="2xl" style={{ color: theme.colors.primary[500] }} />
           </div>
-          <h1 
+          <h1
             className="text-3xl font-bold mb-2"
             style={{ color: theme.semantic.text.primary }}
           >
-            📝 Your Wedding Details
+            📝 Event Details
           </h1>
-          <p 
-            className="text-sm"
+          <p
+            className="text-sm mb-6"
             style={{ color: theme.semantic.text.secondary }}
           >
-            Fill in your details below to get personalized recommendations
+            Select your event type and fill in the details to get personalized recommendations
           </p>
-        </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Bride and Groom Names */}
-          <div 
-            className="p-6 rounded-2xl"
-            style={{ backgroundColor: theme.semantic.background.primary }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label 
-                  className="block text-sm font-semibold mb-2"
-                  style={{ color: theme.colors.primary[600] }}
-                >
-                  Bride's Name: *
-                </label>
-                <Input
-                  type="text"
-                  name="brideName"
-                  value={formData.brideName}
-                  onChange={handleChange}
-                  placeholder="Enter bride's name"
-                  className={errors.brideName ? 'border-red-500' : ''}
-                />
-                {errors.brideName && (
-                  <p className="text-xs text-red-500 mt-1">{errors.brideName}</p>
-                )}
-              </div>
-
-              <div>
-                <label 
-                  className="block text-sm font-semibold mb-2"
-                  style={{ color: theme.colors.primary[600] }}
-                >
-                  Groom's Name: *
-                </label>
-                <Input
-                  type="text"
-                  name="groomName"
-                  value={formData.groomName}
-                  onChange={handleChange}
-                  placeholder="Enter groom's name"
-                  className={errors.groomName ? 'border-red-500' : ''}
-                />
-                {errors.groomName && (
-                  <p className="text-xs text-red-500 mt-1">{errors.groomName}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Wedding Date and Venue */}
-          <div 
-            className="p-6 rounded-2xl"
-            style={{ backgroundColor: theme.semantic.background.primary }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label 
-                  className="block text-sm font-semibold mb-2"
-                  style={{ color: theme.colors.primary[600] }}
-                >
-                  Wedding Date: *
-                </label>
-                <Input
-                  type="date"
-                  name="weddingDate"
-                  value={formData.weddingDate}
-                  onChange={handleChange}
-                  className={errors.weddingDate ? 'border-red-500' : ''}
-                />
-                {errors.weddingDate && (
-                  <p className="text-xs text-red-500 mt-1">{errors.weddingDate}</p>
-                )}
-              </div>
-
-              <div>
-                <label 
-                  className="block text-sm font-semibold mb-2"
-                  style={{ color: theme.colors.primary[600] }}
-                >
-                  Venue: *
-                </label>
-                <Input
-                  type="text"
-                  name="venue"
-                  value={formData.venue}
-                  onChange={handleChange}
-                  placeholder="Enter venue name or city"
-                  className={errors.venue ? 'border-red-500' : ''}
-                />
-                {errors.venue && (
-                  <p className="text-xs text-red-500 mt-1">{errors.venue}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Budget and Guest Count */}
-          <div 
-            className="p-6 rounded-2xl"
-            style={{ backgroundColor: theme.semantic.background.primary }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label 
-                  className="block text-sm font-semibold mb-2"
-                  style={{ color: theme.colors.primary[600] }}
-                >
-                  Total Budget: *
-                </label>
-                <div className="relative">
-                  <span 
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
-                    style={{ color: theme.semantic.text.secondary }}
-                  >
-                    ₹
-                  </span>
-                  <Input
-                    type="number"
-                    name="budget"
-                    value={formData.budget}
-                    onChange={handleChange}
-                    placeholder="Enter your budget"
-                    className={`pl-8 ${errors.budget ? 'border-red-500' : ''}`}
-                  />
-                </div>
-                {errors.budget && (
-                  <p className="text-xs text-red-500 mt-1">{errors.budget}</p>
-                )}
-              </div>
-
-              <div>
-                <label 
-                  className="block text-sm font-semibold mb-2"
-                  style={{ color: theme.colors.primary[600] }}
-                >
-                  Guest Count: *
-                </label>
-                <Input
-                  type="number"
-                  name="guestCount"
-                  value={formData.guestCount}
-                  onChange={handleChange}
-                  placeholder="Expected number of guests"
-                  className={errors.guestCount ? 'border-red-500' : ''}
-                />
-                {errors.guestCount && (
-                  <p className="text-xs text-red-500 mt-1">{errors.guestCount}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Wedding Theme */}
-          <div 
-            className="p-6 rounded-2xl"
-            style={{ backgroundColor: theme.semantic.background.primary }}
-          >
-            <label 
-              className="block text-sm font-semibold mb-2"
+          {/* Event Category Dropdown */}
+          <div className="max-w-md mx-auto">
+            <label
+              className="block text-sm font-semibold mb-2 text-left"
               style={{ color: theme.colors.primary[600] }}
             >
-              Wedding Theme/Style:
+              Select Event Category: *
             </label>
-            <Input
-              type="text"
-              name="weddingTheme"
-              value={formData.weddingTheme}
-              onChange={handleChange}
-              placeholder="Traditional, Modern Fusion, Royal, etc."
-            />
-          </div>
-
-          {/* Special Requirements */}
-          <div 
-            className="p-6 rounded-2xl"
-            style={{ backgroundColor: theme.semantic.background.primary }}
-          >
-            <label 
-              className="block text-sm font-semibold mb-2"
-              style={{ color: theme.colors.primary[600] }}
-            >
-              Notes/Special Requirements:
-            </label>
-            <textarea
-              name="specialRequirements"
-              value={formData.specialRequirements}
-              onChange={handleChange}
-              placeholder="Any specific requirements or preferences..."
-              rows="4"
-              className="w-full px-4 py-3 rounded-xl border text-sm resize-none"
+            <select
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              className="w-full px-4 py-3 rounded-xl border text-sm font-medium transition-colors"
               style={{
                 backgroundColor: theme.semantic.input.background,
                 borderColor: theme.semantic.border.primary,
                 color: theme.semantic.text.primary
               }}
-            />
+            >
+              {Object.keys(eventCategories).map(key => (
+                <option key={key} value={key}>
+                  {eventCategories[key].label}
+                </option>
+              ))}
+            </select>
           </div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Dynamic Form Fields */}
+          {(() => {
+            const fields = eventCategories[selectedCategory].fields;
+            const fieldKeys = Object.keys(fields);
+
+            // Group fields into pairs for two-column layout
+            const fieldPairs = [];
+            for (let i = 0; i < fieldKeys.length; i += 2) {
+              fieldPairs.push(fieldKeys.slice(i, i + 2));
+            }
+
+            return fieldPairs.map((pair, pairIndex) => (
+              <div
+                key={pairIndex}
+                className="p-6 rounded-2xl"
+                style={{ backgroundColor: theme.semantic.background.primary }}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {pair.map(fieldKey => {
+                    const field = fields[fieldKey];
+                    const isTextarea = field.type === 'textarea';
+
+                    return (
+                      <div key={fieldKey} className={pair.length === 1 ? 'md:col-span-2' : ''}>
+                        <label
+                          className="block text-sm font-semibold mb-2"
+                          style={{ color: theme.colors.primary[600] }}
+                        >
+                          {field.label} {field.required && '*'}
+                        </label>
+
+                        {isTextarea ? (
+                          <textarea
+                            name={fieldKey}
+                            value={formData[fieldKey] || ''}
+                            onChange={handleChange}
+                            placeholder={`Enter ${field.label.toLowerCase()}`}
+                            rows="4"
+                            className={`w-full px-4 py-3 rounded-xl border text-sm resize-none ${errors[fieldKey] ? 'border-red-500' : ''
+                              }`}
+                            style={{
+                              backgroundColor: theme.semantic.input.background,
+                              borderColor: errors[fieldKey]
+                                ? '#ef4444'
+                                : theme.semantic.border.primary,
+                              color: theme.semantic.text.primary
+                            }}
+                          />
+                        ) : (
+                          <div className={field.prefix ? 'relative' : ''}>
+                            {field.prefix && (
+                              <span
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
+                                style={{ color: theme.semantic.text.secondary }}
+                              >
+                                {field.prefix}
+                              </span>
+                            )}
+                            <Input
+                              type={field.type}
+                              name={fieldKey}
+                              value={formData[fieldKey] || ''}
+                              onChange={handleChange}
+                              placeholder={`Enter ${field.label.toLowerCase()}`}
+                              className={`${errors[fieldKey] ? 'border-red-500' : ''} ${field.prefix ? 'pl-8' : ''
+                                }`}
+                            />
+                          </div>
+                        )}
+
+                        {errors[fieldKey] && (
+                          <p className="text-xs text-red-500 mt-1">{errors[fieldKey]}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ));
+          })()}
 
           {/* Info Tip */}
-          <div 
+          <div
             className="p-4 rounded-xl flex items-start gap-3"
             style={{ backgroundColor: theme.colors.secondary[50] }}
           >
             <Icon name="lightbulb" size="md" style={{ color: theme.colors.secondary[500] }} />
-            <p 
+            <p
               className="text-xs"
               style={{ color: theme.semantic.text.secondary }}
             >
-              💡 Tip: Providing accurate details helps us recommend the best vendors and services for your wedding!
+              💡 Tip: Providing accurate details helps us recommend the best vendors and services for your {eventCategories[selectedCategory].label.toLowerCase()}!
             </p>
           </div>
 
@@ -326,7 +400,7 @@ const WeddingDetailsForm = () => {
                 color: 'white'
               }}
             >
-              Continue to Dashboard →
+              Continue to Planning Dashboard →
             </Button>
 
             <button

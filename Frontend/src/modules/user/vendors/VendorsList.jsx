@@ -15,20 +15,53 @@ const VendorsList = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { showToast, ToastComponent } = useToast();
-  
+
   // Get global Lenis instance
   const lenis = useLenisContext();
-  
+
   const categoryTitle = location.state?.categoryTitle || category || 'Vendors';
   const [sortBy, setSortBy] = useState('rating');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [savedVendors, setSavedVendors] = useState([]);
+  const [showMap, setShowMap] = useState(false);
   const [filters, setFilters] = useState({
     priceRange: 'all',
     rating: 'all',
     availability: 'all',
-    location: 'all'
+    location: 'all',
+    services: 'all',
+    experience: 'all',
+    responseTime: 'all'
   });
+
+  // Load saved vendors from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('savedVendors');
+    if (saved) {
+      setSavedVendors(JSON.parse(saved));
+    }
+  }, []);
+
+  // Toggle save vendor
+  const toggleSaveVendor = (vendorId) => {
+    let updatedSavedVendors;
+    if (savedVendors.includes(vendorId)) {
+      updatedSavedVendors = savedVendors.filter(id => id !== vendorId);
+      showToast('Vendor removed from saved list', 'info', 2000);
+    } else {
+      updatedSavedVendors = [...savedVendors, vendorId];
+      showToast('Vendor saved to your list', 'success', 2000);
+    }
+    setSavedVendors(updatedSavedVendors);
+    localStorage.setItem('savedVendors', JSON.stringify(updatedSavedVendors));
+  };
+
+  // Toggle map view
+  const toggleMapView = () => {
+    setShowMap(!showMap);
+    showToast(showMap ? 'Map view hidden' : 'Map view enabled', 'info', 2000);
+  };
 
   // Initialize scroll animations for vendor cards
   useEffect(() => {
@@ -48,7 +81,7 @@ const VendorsList = () => {
 
       // Animate vendor cards
       const vendorCards = document.querySelectorAll('.vendor-list-card');
-      
+
       vendorCards.forEach((card, index) => {
         gsap.set(card, {
           opacity: 0,
@@ -81,20 +114,20 @@ const VendorsList = () => {
   const filteredVendors = vendors.filter(vendor => {
     // Category filter
     const matchesCategory = category === 'all' || vendor.category === category;
-    
+
     // Search filter
-    const matchesSearch = searchQuery === '' || 
+    const matchesSearch = searchQuery === '' ||
       vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       vendor.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vendor.specialties?.some(specialty => 
+      vendor.specialties?.some(specialty =>
         specialty.toLowerCase().includes(searchQuery.toLowerCase())
       );
-    
+
     // Price range filter
     const matchesPriceRange = filters.priceRange === 'all' || (() => {
       const price = vendor.price || vendor.priceRange;
       if (!price) return true;
-      
+
       const priceNum = parseInt(price.replace(/[^\d]/g, ''));
       switch (filters.priceRange) {
         case 'budget': return priceNum < 50000;
@@ -103,7 +136,7 @@ const VendorsList = () => {
         default: return true;
       }
     })();
-    
+
     // Rating filter
     const matchesRating = filters.rating === 'all' || (() => {
       const rating = vendor.rating || 0;
@@ -113,12 +146,45 @@ const VendorsList = () => {
         default: return true;
       }
     })();
-    
+
     // Availability filter
-    const matchesAvailability = filters.availability === 'all' || 
+    const matchesAvailability = filters.availability === 'all' ||
       (filters.availability === 'available' && vendor.isAvailable !== false);
-    
-    return matchesCategory && matchesSearch && matchesPriceRange && matchesRating && matchesAvailability;
+
+    // Location filter
+    const matchesLocation = filters.location === 'all' ||
+      vendor.location?.toLowerCase().includes(filters.location.toLowerCase());
+
+    // Services filter
+    const matchesServices = filters.services === 'all' ||
+      vendor.services?.some(service =>
+        service.toLowerCase().includes(filters.services.toLowerCase())
+      );
+
+    // Experience filter
+    const matchesExperience = filters.experience === 'all' || (() => {
+      const experience = vendor.experience || 0;
+      switch (filters.experience) {
+        case '5+': return experience >= 5;
+        case '10+': return experience >= 10;
+        case '15+': return experience >= 15;
+        default: return true;
+      }
+    })();
+
+    // Response time filter
+    const matchesResponseTime = filters.responseTime === 'all' || (() => {
+      const responseTime = vendor.responseTime || '';
+      switch (filters.responseTime) {
+        case 'fast': return responseTime.toLowerCase().includes('hour') || responseTime.toLowerCase().includes('fast');
+        case 'normal': return responseTime.toLowerCase().includes('day') || responseTime.toLowerCase().includes('normal');
+        case 'slow': return responseTime.toLowerCase().includes('week') || responseTime.toLowerCase().includes('slow');
+        default: return true;
+      }
+    })();
+
+    return matchesCategory && matchesSearch && matchesPriceRange && matchesRating &&
+      matchesAvailability && matchesLocation && matchesServices && matchesExperience && matchesResponseTime;
   });
 
   const sortedVendors = [...filteredVendors].sort((a, b) => {
@@ -154,7 +220,10 @@ const VendorsList = () => {
       priceRange: 'all',
       rating: 'all',
       availability: 'all',
-      location: 'all'
+      location: 'all',
+      services: 'all',
+      experience: 'all',
+      responseTime: 'all'
     });
     setSearchQuery('');
     showToast('All filters cleared', 'info', 2000);
@@ -165,14 +234,14 @@ const VendorsList = () => {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen"
       style={{ backgroundColor: theme.semantic.background.primary }}
     >
       <div className="px-3 sm:px-4 py-3 max-w-7xl mx-auto">
         {/* Back Button and Title */}
         <div className="flex items-center justify-between mb-4">
-          <button 
+          <button
             onClick={() => navigate('/user/vendors')}
             className="flex items-center space-x-2 text-sm font-medium py-1 px-2 rounded-lg hover:bg-opacity-10 hover:bg-black transition-colors"
             style={{ color: theme.semantic.text.secondary }}
@@ -180,23 +249,25 @@ const VendorsList = () => {
             <Icon name="chevronLeft" size="sm" />
             <span className="hidden xs:inline">Back</span>
           </button>
-          
-          <h1 
+
+          <h1
             className="text-base sm:text-lg font-bold text-center flex-1 mx-4"
             style={{ color: theme.semantic.text.primary }}
           >
             {categoryTitle}
           </h1>
-          
-          <div className="w-12 sm:w-16"></div> {/* Spacer for center alignment */}
+
+          {/* Action Icons Removed as requested */}
+          <div className="flex items-center gap-2">
+          </div>
         </div>
 
         {/* Search Bar with Filter */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1 relative">
-            <Icon 
-              name="search" 
-              size="sm" 
+            <Icon
+              name="search"
+              size="sm"
               className="absolute left-3 top-1/2 transform -translate-y-1/2"
               style={{ color: theme.semantic.text.secondary }}
             />
@@ -213,7 +284,7 @@ const VendorsList = () => {
               }}
             />
           </div>
-          
+
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`p-3 rounded-xl border transition-all relative ${showFilters ? 'shadow-md' : ''}`}
@@ -225,7 +296,7 @@ const VendorsList = () => {
           >
             <Icon name="filter" size="sm" />
             {getActiveFiltersCount() > 0 && (
-              <div 
+              <div
                 className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
                 style={{ backgroundColor: theme.colors.accent[500], color: 'white' }}
               >
@@ -245,7 +316,7 @@ const VendorsList = () => {
               <button
                 onClick={clearAllFilters}
                 className="text-xs font-medium px-3 py-1 rounded-lg"
-                style={{ 
+                style={{
                   color: theme.colors.primary[600],
                   backgroundColor: theme.colors.primary[50]
                 }}
@@ -253,8 +324,8 @@ const VendorsList = () => {
                 Clear All
               </button>
             </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {/* Price Range Filter */}
               <div>
                 <label className="block text-xs font-medium mb-2" style={{ color: theme.semantic.text.secondary }}>
@@ -318,6 +389,100 @@ const VendorsList = () => {
                 </select>
               </div>
 
+              {/* Location Filter */}
+              <div>
+                <label className="block text-xs font-medium mb-2" style={{ color: theme.semantic.text.secondary }}>
+                  Location
+                </label>
+                <select
+                  value={filters.location}
+                  onChange={(e) => handleFilterChange('location', e.target.value)}
+                  className="vendor-filter-select w-full px-3 py-2 border rounded-lg text-sm"
+                  style={{
+                    backgroundColor: theme.semantic.background.accent,
+                    borderColor: theme.semantic.border.light,
+                    color: theme.semantic.text.primary
+                  }}
+                >
+                  <option value="all">All Locations</option>
+                  <option value="mumbai">Mumbai</option>
+                  <option value="delhi">Delhi</option>
+                  <option value="bangalore">Bangalore</option>
+                  <option value="pune">Pune</option>
+                  <option value="jaipur">Jaipur</option>
+                  <option value="goa">Goa</option>
+                </select>
+              </div>
+
+              {/* Services Filter */}
+              <div>
+                <label className="block text-xs font-medium mb-2" style={{ color: theme.semantic.text.secondary }}>
+                  Services
+                </label>
+                <select
+                  value={filters.services}
+                  onChange={(e) => handleFilterChange('services', e.target.value)}
+                  className="vendor-filter-select w-full px-3 py-2 border rounded-lg text-sm"
+                  style={{
+                    backgroundColor: theme.semantic.background.accent,
+                    borderColor: theme.semantic.border.light,
+                    color: theme.semantic.text.primary
+                  }}
+                >
+                  <option value="all">All Services</option>
+                  <option value="photography">Photography</option>
+                  <option value="videography">Videography</option>
+                  <option value="decoration">Decoration</option>
+                  <option value="catering">Catering</option>
+                  <option value="music">Music</option>
+                  <option value="mehndi">Mehndi</option>
+                </select>
+              </div>
+
+              {/* Experience Filter */}
+              <div>
+                <label className="block text-xs font-medium mb-2" style={{ color: theme.semantic.text.secondary }}>
+                  Experience
+                </label>
+                <select
+                  value={filters.experience}
+                  onChange={(e) => handleFilterChange('experience', e.target.value)}
+                  className="vendor-filter-select w-full px-3 py-2 border rounded-lg text-sm"
+                  style={{
+                    backgroundColor: theme.semantic.background.accent,
+                    borderColor: theme.semantic.border.light,
+                    color: theme.semantic.text.primary
+                  }}
+                >
+                  <option value="all">All Experience</option>
+                  <option value="5+">5+ Years</option>
+                  <option value="10+">10+ Years</option>
+                  <option value="15+">15+ Years</option>
+                </select>
+              </div>
+
+              {/* Response Time Filter */}
+              <div>
+                <label className="block text-xs font-medium mb-2" style={{ color: theme.semantic.text.secondary }}>
+                  Response Time
+                </label>
+                <select
+                  value={filters.responseTime}
+                  onChange={(e) => handleFilterChange('responseTime', e.target.value)}
+                  className="vendor-filter-select w-full px-3 py-2 border rounded-lg text-sm"
+                  style={{
+                    backgroundColor: theme.semantic.background.accent,
+                    borderColor: theme.semantic.border.light,
+                    color: theme.semantic.text.primary
+                  }}
+                >
+                  <option value="all">All Response Times</option>
+                  <option value="fast">Within Hours</option>
+                  <option value="normal">Within Days</option>
+                  <option value="slow">Within Weeks</option>
+                </select>
+              </div>
+
               {/* Sort By */}
               <div>
                 <label className="block text-xs font-medium mb-2" style={{ color: theme.semantic.text.secondary }}>
@@ -344,7 +509,7 @@ const VendorsList = () => {
           </Card>
         )}
         {/* Results Count */}
-        <div 
+        <div
           className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3 xs:gap-0 mb-4 p-3 sm:p-4 rounded-lg"
           style={{
             backgroundColor: theme.semantic.card.background,
@@ -354,7 +519,7 @@ const VendorsList = () => {
           }}
         >
           <div className="flex items-center justify-between xs:justify-start">
-            <span 
+            <span
               className="text-sm font-medium"
               style={{ color: theme.semantic.text.primary }}
             >
@@ -365,14 +530,14 @@ const VendorsList = () => {
                 </span>
               )}
             </span>
-            <span 
+            <span
               className="text-xs xs:hidden ml-2"
               style={{ color: theme.semantic.text.secondary }}
             >
               in {categoryTitle}
             </span>
           </div>
-          
+
           {getActiveFiltersCount() > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-xs" style={{ color: theme.semantic.text.secondary }}>
@@ -381,7 +546,7 @@ const VendorsList = () => {
               <button
                 onClick={clearAllFilters}
                 className="text-xs px-2 py-1 rounded"
-                style={{ 
+                style={{
                   color: theme.colors.primary[600],
                   backgroundColor: theme.colors.primary[50]
                 }}
@@ -398,7 +563,11 @@ const VendorsList = () => {
             console.log('Rendering vendor:', vendor.id, vendor.name, vendor.category);
             return (
               <div key={vendor.id} className="vendor-list-card">
-                <VendorCard vendor={vendor} layout="responsive" />
+                <VendorCard
+                  vendor={vendor}
+                  layout="responsive"
+                  onToggleSave={toggleSaveVendor}
+                />
               </div>
             );
           })}
@@ -406,7 +575,7 @@ const VendorsList = () => {
 
         {/* Enhanced Empty State */}
         {sortedVendors.length === 0 && (
-          <div 
+          <div
             className="text-center py-12 sm:py-16 mb-24 rounded-lg mx-auto max-w-md"
             style={{
               backgroundColor: theme.semantic.card.background,
@@ -416,26 +585,26 @@ const VendorsList = () => {
             }}
           >
             <div className="mb-6 flex justify-center">
-              <div 
+              <div
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: theme.colors.primary[50] }}
               >
                 <Icon name="noResults" size="2xl" color="muted" />
               </div>
             </div>
-            <h3 
+            <h3
               className="text-lg sm:text-xl font-semibold mb-2"
               style={{ color: theme.semantic.text.primary }}
             >
               No vendors found
             </h3>
-            <p 
+            <p
               className="text-sm sm:text-base mb-6 px-4"
               style={{ color: theme.semantic.text.secondary }}
             >
               We couldn't find any {categoryTitle.toLowerCase()} in your area. Try browsing other categories.
             </p>
-            <Button 
+            <Button
               onClick={() => navigate('/user/vendors')}
               variant="primary"
               className="px-6 py-2"
@@ -445,7 +614,7 @@ const VendorsList = () => {
           </div>
         )}
       </div>
-      
+
       {/* Toast Component */}
       <ToastComponent />
     </div>

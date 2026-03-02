@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../ui/Button';
@@ -11,15 +11,18 @@ const Header = () => {
   const { theme, changeTheme, availableThemes, themeName } = useTheme();
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHamburgerMenuOpen, setIsHamburgerMenuOpen] = useState(false);
-  
+
   // Mock notification count - replace with actual data from context/API
   const [notificationCount] = useState(3);
 
   const handleNotificationsClick = () => {
     navigate('/user/notifications');
   };
+
+  const isDashboard = location.pathname === '/user/dashboard';
 
   const headerStyles = {
     backgroundColor: theme.semantic.navigation.background,
@@ -49,39 +52,39 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link 
-              to="/user/home" 
+            <Link
+              to="/user/home"
               className="text-xl sm:text-2xl font-bold"
               style={logoStyles}
             >
               UtsavChakra
             </Link>
           </div>
-          
+
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Notification Icon */}
+            {/* Saved Items Icon */}
             {isAuthenticated && (
               <button
-                onClick={handleNotificationsClick}
+                onClick={() => navigate('/user/favourites')}
                 className="relative p-2 rounded-lg transition-colors"
-                style={{ 
+                style={{
                   color: theme.semantic.text.secondary,
                   backgroundColor: 'transparent'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.color = theme.semantic.text.primary;
-                  e.target.style.backgroundColor = theme.semantic.background.accent;
+                  e.currentTarget.style.color = theme.semantic.text.primary;
+                  e.currentTarget.style.backgroundColor = theme.semantic.background.accent;
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.color = theme.semantic.text.secondary;
-                  e.target.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = theme.semantic.text.secondary;
+                  e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
-                <Icon name="bell" size="md" />
-                {/* Notification Badge */}
+                <Icon name="heart" size="md" />
+                {/* Saved Badge */}
                 {notificationCount > 0 && (
-                  <div 
+                  <div
                     className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
                     style={{ backgroundColor: theme.colors.accent[500] }}
                   >
@@ -92,10 +95,10 @@ const Header = () => {
                 )}
               </button>
             )}
-            
+
             {/* Cart Icon */}
-            <CartIcon />
-            
+            {!isDashboard && <CartIcon />}
+
             {/* Theme Switcher */}
             <select
               value={themeName}
@@ -123,11 +126,11 @@ const Header = () => {
                 </option>
               ))}
             </select>
-            
+
             {/* Authentication Section */}
             {isAuthenticated ? (
               <div className="flex items-center space-x-3">
-                <Link 
+                <Link
                   to="/user/account"
                   className="flex items-center space-x-2 px-3 py-1 rounded-lg transition-colors"
                   style={{ color: theme.semantic.text.primary }}
@@ -153,7 +156,7 @@ const Header = () => {
                 <button
                   onClick={logout}
                   className="text-sm px-3 py-1 rounded-lg transition-colors"
-                  style={{ 
+                  style={{
                     color: theme.semantic.text.secondary,
                     backgroundColor: 'transparent'
                   }}
@@ -180,28 +183,28 @@ const Header = () => {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
-            {/* Notification Icon for Mobile */}
+            {/* Saved Items for Mobile */}
             {isAuthenticated && (
               <button
-                onClick={handleNotificationsClick}
+                onClick={() => navigate('/user/favourites')}
                 className="relative p-2 rounded-lg transition-colors"
-                style={{ 
+                style={{
                   color: theme.semantic.navigation.text,
                   backgroundColor: 'transparent'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.color = theme.semantic.text.accent;
-                  e.target.style.backgroundColor = theme.semantic.navigation.backgroundHover;
+                  e.currentTarget.style.color = theme.semantic.text.accent;
+                  e.currentTarget.style.backgroundColor = theme.semantic.navigation.backgroundHover;
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.color = theme.semantic.navigation.text;
-                  e.target.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = theme.semantic.navigation.text;
+                  e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
-                <Icon name="bell" size="sm" />
-                {/* Notification Badge */}
+                <Icon name="heart" size="sm" />
+                {/* Saved Badge */}
                 {notificationCount > 0 && (
-                  <div 
+                  <div
                     className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
                     style={{ backgroundColor: theme.colors.accent[500] }}
                   >
@@ -212,10 +215,10 @@ const Header = () => {
                 )}
               </button>
             )}
-            
+
             {/* Cart Icon for Mobile */}
-            <CartIcon />
-            
+            {!isDashboard && <CartIcon />}
+
             <button
               onClick={() => setIsHamburgerMenuOpen(!isHamburgerMenuOpen)}
               className="p-2 rounded-lg transition-colors focus:outline-none"
@@ -248,7 +251,7 @@ const Header = () => {
             <div className="px-2 pt-2 pb-3 space-y-3">
               {/* Theme Switcher Mobile */}
               <div>
-                <label 
+                <label
                   className="block text-sm font-medium mb-1"
                   style={{ color: theme.semantic.text.primary }}
                 >
@@ -281,7 +284,7 @@ const Header = () => {
                   ))}
                 </select>
               </div>
-              
+
               {/* Authentication Section Mobile */}
               {isAuthenticated ? (
                 <div className="space-y-3">
@@ -297,13 +300,13 @@ const Header = () => {
                       />
                     </div>
                     <div>
-                      <p 
+                      <p
                         className="font-medium"
                         style={{ color: theme.semantic.text.primary }}
                       >
                         {user.name}
                       </p>
-                      <p 
+                      <p
                         className="text-sm"
                         style={{ color: theme.semantic.text.secondary }}
                       >
@@ -312,8 +315,8 @@ const Header = () => {
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <Link 
-                      to="/user/account" 
+                    <Link
+                      to="/user/account"
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="flex-1"
                     >
@@ -345,11 +348,11 @@ const Header = () => {
           </div>
         )}
       </div>
-      
+
       {/* Hamburger Menu */}
-      <HamburgerMenu 
-        isOpen={isHamburgerMenuOpen} 
-        onClose={() => setIsHamburgerMenuOpen(false)} 
+      <HamburgerMenu
+        isOpen={isHamburgerMenuOpen}
+        onClose={() => setIsHamburgerMenuOpen(false)}
       />
     </header>
   );

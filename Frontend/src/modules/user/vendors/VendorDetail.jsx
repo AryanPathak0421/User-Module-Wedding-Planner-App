@@ -11,14 +11,47 @@ const VendorDetail = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { addToCart, isInCart } = useCart();
-  
+
   const [vendor, setVendor] = useState(null);
   const [activeTab, setActiveTab] = useState('pricing');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSticky, setIsSticky] = useState(false);
-  
+
   const tabsRef = useRef(null);
   const sectionsRef = useRef({});
+
+  // Modal states
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [requestStatus, setRequestStatus] = useState('idle'); // idle, sending, success
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    date: '',
+    openToOtherDates: false,
+    guestCount: '100-200',
+    message: ''
+  });
+
+  // Pre-fill form from localStorage
+  useEffect(() => {
+    const savedDetails = localStorage.getItem('eventDetails');
+    if (savedDetails) {
+      try {
+        const parsed = JSON.parse(savedDetails);
+        setFormData(prev => ({
+          ...prev,
+          name: parsed.fullName || parsed.name || '',
+          email: parsed.email || '',
+          phone: parsed.phone || '',
+          date: parsed.weddingDate || '',
+          message: `Hey there! We are interested in potentially hosting our wedding at your ${vendor?.category || 'venue'}. Could you send through information on your packages? Thanks!`
+        }));
+      } catch (e) {
+        console.error('Error parsing event details', e);
+      }
+    }
+  }, [vendor]);
 
   // Mock data for vendor details
   const vendorImages = [
@@ -203,6 +236,18 @@ const VendorDetail = () => {
     navigate(`/user/chats/${vendorId}`);
   };
 
+  const handleSendRequest = () => {
+    setRequestStatus('sending');
+    // Mock API call
+    setTimeout(() => {
+      setRequestStatus('success');
+      setTimeout(() => {
+        setIsRequestModalOpen(false);
+        setRequestStatus('idle');
+      }, 2000);
+    }, 1500);
+  };
+
   if (!vendor) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -215,97 +260,132 @@ const VendorDetail = () => {
     <div className="min-h-screen" style={{ backgroundColor: theme.semantic.background.primary }}>
       {/* Hero Image Section */}
       <div className="relative">
-        <div className="w-full h-64 sm:h-80 overflow-hidden">
+        <div className="w-full h-72 sm:h-96 overflow-hidden">
           <img
             src={vendorImages[currentImageIndex]}
             alt={vendor.name}
             className="w-full h-full object-cover"
           />
+          {/* Video Overlay - Bottom Left */}
+          <div className="absolute bottom-4 left-4">
+            <div className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30">
+              <Icon name="play" size="sm" color="white" />
+            </div>
+          </div>
         </div>
-        
-        {/* Image Counter */}
-        <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+
+        {/* Top Control Bar Overlay */}
+        <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between z-20">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 bg-black/30 backdrop-blur-md text-white rounded-full flex items-center justify-center border border-white/20"
+          >
+            <Icon name="arrowLeft" size="sm" />
+          </button>
+
+          <div className="flex gap-2">
+            <button className="w-10 h-10 bg-black/30 backdrop-blur-md text-white rounded-full flex items-center justify-center border border-white/20">
+              <Icon name="share" size="sm" />
+            </button>
+          </div>
+        </div>
+
+        {/* Hired & Save Overlay - Top Right over image */}
+        <div className="absolute top-16 right-4 flex items-center gap-3 z-10">
+          <button className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg border border-gray-100">
+            <Icon name="verified" size="xs" color="primary" />
+            <span className="text-[10px] font-bold text-gray-800">Hired?</span>
+          </button>
+          <button className="w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-gray-100">
+            <Icon name="heart" size="sm" color="primary" />
+          </button>
+        </div>
+
+        {/* Image Counter - Bottom Right */}
+        <div className="absolute bottom-4 right-4 bg-black/40 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs border border-white/30">
           {currentImageIndex + 1} / {vendorImages.length}
-        </div>
-
-        {/* Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 w-10 h-10 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center"
-        >
-          <Icon name="arrowLeft" size="sm" />
-        </button>
-
-        {/* Share & Bookmark */}
-        <div className="absolute top-4 right-16 flex gap-2">
-          <button className="w-10 h-10 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center">
-            <Icon name="share" size="sm" />
-          </button>
-          <button className="w-10 h-10 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center">
-            <Icon name="bookmark" size="sm" />
-          </button>
         </div>
       </div>
 
-      {/* Vendor Summary Card */}
-      <div className="px-4 -mt-8 relative z-10">
-        <div 
-          className="rounded-2xl p-4 sm:p-6 shadow-lg"
-          style={{ backgroundColor: theme.semantic.card.background }}
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex-1 min-w-0">
-              <h1 
-                className="text-xl sm:text-2xl font-semibold mb-2 line-clamp-2"
-                style={{ color: theme.semantic.text.primary }}
-              >
-                {vendor.name}
-              </h1>
-              
-              <div className="flex items-center gap-3 mb-2">
-                <div className="flex items-center gap-1">
-                  <Icon name="star" size="sm" color="secondary" />
-                  <span 
-                    className="font-medium text-sm"
-                    style={{ color: theme.semantic.text.primary }}
-                  >
-                    {vendor.rating}
-                  </span>
-                  <span 
-                    className="text-sm"
-                    style={{ color: theme.semantic.text.secondary }}
-                  >
-                    Excellent ({vendor.reviews} Reviews)
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Icon name="location" size="sm" color="secondary" />
-                <span 
-                  className="text-sm flex-1 min-w-0 truncate"
-                  style={{ color: theme.semantic.text.secondary }}
-                >
-                  {vendor.location}
-                </span>
-                <button 
-                  className="text-sm underline flex-shrink-0"
-                  style={{ color: theme.colors.primary[600] }}
-                >
-                  Location
-                </button>
-              </div>
-            </div>
-
-            <button className="p-2 flex-shrink-0">
-              <Icon name="more" size="sm" />
-            </button>
+      {/* Urgency Banner */}
+      <div className="px-4 py-3 border-b" style={{ backgroundColor: '#f0f9ff', borderColor: '#e0f2fe' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+            <Icon name="party" size="xs" style={{ color: '#f97316' }} />
           </div>
+          <p className="text-xs font-medium" style={{ color: '#0369a1' }}>
+            One couple is considering this venue right now. <button className="font-bold underline">Save your date</button>
+          </p>
+        </div>
+      </div>
+
+      {/* Main Vendor Details */}
+      <div className="px-5 pt-6 pb-2">
+        <h1
+          className="text-2xl font-bold mb-3"
+          style={{ color: theme.semantic.text.primary }}
+        >
+          {vendor.name}
+        </h1>
+
+        <div className="flex flex-col gap-3">
+          {/* Rating Section */}
+          <div className="flex items-center gap-4">
+            <div className="flex gap-1">
+              {[...Array(5)].map((_, i) => (
+                <Icon key={i} name="star" size="xs" color={i < 4 ? "secondary" : "muted"} />
+              ))}
+            </div>
+            <span className="text-xs font-medium" style={{ color: theme.semantic.text.secondary }}>No reviews yet. <button className="underline text-primary-600">Write a review</button></span>
+          </div>
+
+          {/* Location Section */}
+          <div className="flex items-center gap-2">
+            <Icon name="location" size="sm" style={{ color: theme.semantic.text.tertiary }} />
+            <span className="text-sm underline cursor-pointer" style={{ color: theme.semantic.text.secondary }}>
+              {vendor.location}
+            </span>
+          </div>
+
+          {/* Promotion Section */}
+          <div className="flex items-center gap-2">
+            <Icon name="sparkles" size="sm" style={{ color: theme.colors.primary[500] }} />
+            <span className="text-xs font-bold uppercase tracking-wide" style={{ color: theme.colors.primary[600] }}>
+              1 promotion <span className="ml-2 font-black">10% discount</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Highlight Cards */}
+        <div className="grid grid-cols-1 gap-3 mt-6">
+          <div className="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center">
+                <Icon name="money" size="sm" style={{ color: theme.semantic.text.secondary }} />
+              </div>
+              <p className="text-sm font-medium" style={{ color: theme.semantic.text.primary }}>Price per plate ₹1,000</p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-white shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center">
+                <Icon name="users" size="sm" style={{ color: theme.semantic.text.secondary }} />
+              </div>
+              <p className="text-sm font-medium" style={{ color: theme.semantic.text.primary }}>20 to 2000 guests</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Popular Badge */}
+        <div className="mt-4 flex items-center gap-2">
+          <Icon name="arrow" size="xs" className="rotate-45" style={{ color: theme.semantic.text.secondary }} />
+          <span className="text-xs font-semibold text-gray-500 italic">Popular in your area</span>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div 
+      <div
         ref={tabsRef}
         className={`px-4 py-3 ${isSticky ? 'shadow-md' : ''}`}
         style={{ backgroundColor: theme.semantic.background.primary }}
@@ -320,15 +400,14 @@ const VendorDetail = () => {
             <button
               key={tab.key}
               onClick={() => handleTabClick(tab.key)}
-              className={`whitespace-nowrap pb-2 border-b-2 transition-colors text-sm sm:text-base ${
-                activeTab === tab.key 
-                  ? 'border-current font-medium' 
-                  : 'border-transparent'
-              }`}
-              style={{ 
-                color: activeTab === tab.key 
-                  ? theme.colors.primary[600] 
-                  : theme.semantic.text.secondary 
+              className={`whitespace-nowrap pb-2 border-b-2 transition-colors text-sm sm:text-base ${activeTab === tab.key
+                ? 'border-current font-medium'
+                : 'border-transparent'
+                }`}
+              style={{
+                color: activeTab === tab.key
+                  ? theme.colors.primary[600]
+                  : theme.semantic.text.secondary
               }}
             >
               {tab.label}
@@ -338,41 +417,41 @@ const VendorDetail = () => {
       </div>
 
       {/* Content Sections */}
-      <div className="px-4 pb-24 sm:pb-32">
+      <div className="px-4 pb-40">
         {/* Pricing Section */}
-        <div 
+        <div
           ref={el => sectionsRef.current['pricing'] = el}
           className="mb-6 sm:mb-8"
         >
-          <h2 
+          <h2
             className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4"
             style={{ color: theme.semantic.text.primary }}
           >
             Pricing Info
           </h2>
-          
-          <div 
+
+          <div
             className="rounded-2xl p-4 sm:p-6 space-y-3 sm:space-y-4"
             style={{ backgroundColor: theme.semantic.card.background }}
           >
             {pricingData.map((item) => (
               <div key={item.id} className="flex items-center justify-between py-2 sm:py-3 border-b border-gray-100 last:border-b-0">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div 
+                  <div
                     className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                     style={{ backgroundColor: theme.colors.primary[100] }}
                   >
                     <Icon name={item.icon} size="sm" color="primary" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 
+                    <h3
                       className="font-medium text-sm sm:text-base line-clamp-1"
                       style={{ color: theme.semantic.text.primary }}
                     >
                       {item.name}
                     </h3>
                     {item.description && (
-                      <p 
+                      <p
                         className="text-xs sm:text-sm line-clamp-1"
                         style={{ color: theme.semantic.text.secondary }}
                       >
@@ -381,15 +460,15 @@ const VendorDetail = () => {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="text-right flex-shrink-0">
-                  <div 
+                  <div
                     className="font-bold text-sm sm:text-lg"
                     style={{ color: theme.semantic.text.primary }}
                   >
                     {item.price}
                   </div>
-                  <div 
+                  <div
                     className="text-xs sm:text-sm"
                     style={{ color: theme.semantic.text.secondary }}
                   >
@@ -401,26 +480,26 @@ const VendorDetail = () => {
           </div>
 
           {/* Check Availability */}
-          <div 
+          <div
             className="rounded-2xl p-4 sm:p-6 mt-4 sm:mt-6"
             style={{ backgroundColor: theme.semantic.card.background }}
           >
-            <h3 
+            <h3
               className="text-base sm:text-lg font-semibold mb-3 sm:mb-4"
               style={{ color: theme.semantic.text.primary }}
             >
               Check Availability
             </h3>
-            
+
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1">
                 <input
                   type="date"
                   defaultValue="2028-04-08"
                   className="w-full p-2 sm:p-3 border rounded-lg text-sm sm:text-base"
-                  style={{ 
+                  style={{
                     borderColor: theme.semantic.card.border,
-                    backgroundColor: theme.semantic.background.primary 
+                    backgroundColor: theme.semantic.background.primary
                   }}
                 />
               </div>
@@ -439,19 +518,19 @@ const VendorDetail = () => {
         </div>
 
         {/* Projects Section */}
-        <div 
+        <div
           ref={el => sectionsRef.current['projects'] = el}
           className="mb-6 sm:mb-8"
         >
           <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h2 
+            <h2
               className="text-lg sm:text-xl font-semibold"
               style={{ color: theme.semantic.text.primary }}
             >
               Albums <span className="text-sm font-normal">3 nos.</span>
             </h2>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
             {albumsData.map((album) => (
               <div key={album.id} className="relative">
@@ -462,13 +541,13 @@ const VendorDetail = () => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                
+
                 {/* Image Count Badge */}
                 <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs flex items-center gap-1">
                   <Icon name="image" size="xs" />
                   {album.imageCount}
                 </div>
-                
+
                 {/* Album Name */}
                 <div className="absolute bottom-2 left-2">
                   <span className="text-white font-medium text-xs sm:text-sm bg-black bg-opacity-50 px-2 py-1 rounded">
@@ -487,13 +566,13 @@ const VendorDetail = () => {
           </Button>
 
           {/* Video Stories */}
-          <h3 
+          <h3
             className="text-base sm:text-lg font-semibold mb-3 sm:mb-4"
             style={{ color: theme.semantic.text.primary }}
           >
             Video Stories
           </h3>
-          
+
           <div className="flex gap-3 overflow-x-auto">
             {videoStories.map((video) => (
               <div key={video.id} className="relative flex-shrink-0">
@@ -504,7 +583,7 @@ const VendorDetail = () => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                
+
                 {/* Play Button */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
@@ -516,19 +595,19 @@ const VendorDetail = () => {
           </div>
 
           {/* Custom Quote CTA */}
-          <div 
+          <div
             className="rounded-2xl p-3 sm:p-4 mt-4 sm:mt-6 border-2 border-dashed"
             style={{ borderColor: theme.colors.primary[300] }}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                <div 
+                <div
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: theme.colors.primary[100] }}
                 >
                   <Icon name="message" size="sm" color="primary" />
                 </div>
-                <span 
+                <span
                   className="font-medium text-sm sm:text-base"
                   style={{ color: theme.semantic.text.primary }}
                 >
@@ -550,18 +629,18 @@ const VendorDetail = () => {
         </div>
 
         {/* About Section */}
-        <div 
+        <div
           ref={el => sectionsRef.current['about'] = el}
           className="mb-6 sm:mb-8"
         >
-          <h2 
+          <h2
             className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4"
             style={{ color: theme.semantic.text.primary }}
           >
             About
           </h2>
-          
-          <div 
+
+          <div
             className="rounded-2xl p-4 sm:p-6"
             style={{ backgroundColor: theme.semantic.card.background }}
           >
@@ -570,16 +649,16 @@ const VendorDetail = () => {
               <span style={{ color: theme.colors.primary[600] }}>UtsavChakra</span>
               <span className="font-medium"> Since {vendor.experience || '2 years'}</span>
             </p>
-            
-            <p 
+
+            <p
               className="text-sm sm:text-base leading-relaxed mb-3 sm:mb-4"
               style={{ color: theme.semantic.text.secondary }}
             >
               {vendor.description || `${vendor.name} is a professional ${vendor.category} service provider in ${vendor.location}. We are committed to making your wedding day special with our exceptional services and attention to detail.`}
             </p>
-            
+
             <div>
-              <h4 
+              <h4
                 className="font-medium mb-2 text-sm sm:text-base"
                 style={{ color: theme.semantic.text.primary }}
               >
@@ -604,35 +683,35 @@ const VendorDetail = () => {
         </div>
 
         {/* Reviews Section */}
-        <div 
+        <div
           ref={el => sectionsRef.current['reviews'] = el}
           className="mb-6 sm:mb-8"
         >
-          <h2 
+          <h2
             className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4"
             style={{ color: theme.semantic.text.primary }}
           >
             Reviews
           </h2>
-          
+
           <div className="space-y-3 sm:space-y-4">
             {reviewsData.map((review) => (
-              <div 
+              <div
                 key={review.id}
                 className="rounded-2xl p-4 sm:p-6"
                 style={{ backgroundColor: theme.semantic.card.background }}
               >
                 <div className="flex items-start gap-3 mb-3">
-                  <div 
+                  <div
                     className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-medium text-sm flex-shrink-0"
                     style={{ backgroundColor: theme.colors.primary[500] }}
                   >
                     {review.initial}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span 
+                      <span
                         className="font-medium text-sm sm:text-base truncate"
                         style={{ color: theme.semantic.text.primary }}
                       >
@@ -650,29 +729,29 @@ const VendorDetail = () => {
                         <span className="text-xs sm:text-sm ml-1">{review.rating}</span>
                       </div>
                     </div>
-                    
-                    <p 
+
+                    <p
                       className="text-xs sm:text-sm mb-2"
                       style={{ color: theme.semantic.text.secondary }}
                     >
                       Reviewed {review.timeAgo}
                     </p>
                   </div>
-                  
+
                   <button className="flex-shrink-0">
                     <Icon name="share" size="sm" />
                   </button>
                 </div>
-                
-                <p 
+
+                <p
                   className="text-sm sm:text-base leading-relaxed"
                   style={{ color: theme.semantic.text.primary }}
                 >
                   {review.review}
                 </p>
-                
+
                 {review.review.length > 100 && (
-                  <button 
+                  <button
                     className="text-sm mt-2"
                     style={{ color: theme.colors.primary[600] }}
                   >
@@ -682,7 +761,7 @@ const VendorDetail = () => {
               </div>
             ))}
           </div>
-          
+
           <Button
             variant="outline"
             className="w-full mt-3 sm:mt-4 text-sm sm:text-base"
@@ -693,27 +772,27 @@ const VendorDetail = () => {
 
         {/* FAQ Section */}
         <div className="mb-6 sm:mb-8">
-          <h2 
+          <h2
             className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4"
             style={{ color: theme.semantic.text.primary }}
           >
             Frequently Asked Questions
           </h2>
-          
+
           <div className="space-y-2 sm:space-y-3">
             {faqData.map((faq) => (
-              <details 
+              <details
                 key={faq.id}
                 className="rounded-2xl overflow-hidden"
                 style={{ backgroundColor: theme.semantic.card.background }}
               >
-                <summary 
+                <summary
                   className="p-3 sm:p-4 cursor-pointer font-medium text-sm sm:text-base"
                   style={{ color: theme.semantic.text.primary }}
                 >
                   {faq.question}
                 </summary>
-                <div 
+                <div
                   className="px-3 sm:px-4 pb-3 sm:pb-4 text-xs sm:text-sm"
                   style={{ color: theme.semantic.text.secondary }}
                 >
@@ -725,46 +804,200 @@ const VendorDetail = () => {
         </div>
       </div>
 
-      {/* Sticky Action Buttons */}
-      <div 
-        className="fixed bottom-16 left-0 right-0 p-3 sm:p-4 z-30"
-        style={{ backgroundColor: theme.semantic.background.primary }}
+      {/* Sticky Action Footer */}
+      <div
+        className="fixed bottom-20 left-0 right-0 p-4 z-50"
+        style={{
+          backgroundColor: theme.semantic.background.primary,
+          borderColor: theme.semantic.border.light
+        }}
       >
-        <div className="flex gap-2 sm:gap-3 max-w-md mx-auto">
-          <Button
-            onClick={handleMessage}
-            className="flex-1 flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base py-2 sm:py-3"
+        <div className="flex items-center gap-4 max-w-md mx-auto">
+          {/* Call Button */}
+          <button
+            onClick={handleCall}
+            className="w-12 h-12 rounded-full border flex items-center justify-center transition-transform active:scale-95"
+            style={{ borderColor: theme.semantic.border.light, backgroundColor: theme.semantic.background.accent }}
+          >
+            <Icon name="phone" size="sm" style={{ color: theme.colors.primary[500] }} />
+          </button>
+
+          {/* Main Pricing Button */}
+          <button
+            onClick={() => setIsRequestModalOpen(true)}
+            className="flex-1 h-12 rounded-full font-bold text-white shadow-lg transition-transform active:scale-95"
             style={{
               backgroundColor: theme.colors.primary[500],
-              color: 'white'
+              boxShadow: `0 4px 15px ${theme.colors.primary[500]}40`
             }}
           >
-            <Icon name="message" size="sm" />
-            Message
-          </Button>
-          
-          <Button
-            onClick={handleWhatsAppContact}
-            className="flex-1 flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base py-2 sm:py-3"
-            style={{
-              backgroundColor: '#25D366',
-              color: 'white'
-            }}
+            Request pricing
+          </button>
+
+          {/* Message Button */}
+          <button
+            onClick={handleMessage}
+            className="w-12 h-12 rounded-full border flex items-center justify-center relative transition-transform active:scale-95"
+            style={{ borderColor: theme.semantic.border.light, backgroundColor: theme.semantic.background.accent }}
           >
-            <Icon name="whatsapp" size="sm" />
-            WhatsApp
-          </Button>
-          
-          <Button
-            onClick={handleCall}
-            variant="outline"
-            className="flex-1 flex items-center justify-center gap-1 sm:gap-2 text-sm sm:text-base py-2 sm:py-3"
-          >
-            <Icon name="phone" size="sm" />
-            Call
-          </Button>
+            <Icon name="chat" size="sm" style={{ color: theme.colors.primary[500] }} />
+            {/* Notification Badge if any */}
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center">
+              <span className="text-[8px] text-white">1</span>
+            </div>
+          </button>
         </div>
       </div>
+
+      {/* Request Pricing Modal - True Bottom Sheet Internal Scroll */}
+      {isRequestModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4">
+          <div className="w-full max-w-md bg-white rounded-t-[40px] sm:rounded-[32px] overflow-hidden flex flex-col max-h-[92dvh] shadow-2xl animate-in slide-in-from-bottom duration-500">
+            {/* Modal Header - Fixed at top of white card */}
+            <div className="shrink-0 px-8 pt-10 pb-6 border-b border-gray-50 flex items-start justify-between bg-white">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-1 leading-none">{vendor.name}</p>
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight">Request pricing</h2>
+              </div>
+              <button
+                onClick={() => setIsRequestModalOpen(false)}
+                className="w-11 h-11 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <Icon name="close" size="sm" />
+              </button>
+            </div>
+
+            {/* Modal Body - Scrollable white page area */}
+            <div className="flex-1 overflow-y-auto px-8 pt-8 pb-36 overscroll-contain scrollbar-hide">
+              {requestStatus === 'success' ? (
+                <div className="py-24 flex flex-col items-center justify-center text-center">
+                  <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-8 shadow-sm">
+                    <Icon name="check" size="lg" style={{ color: '#10b981' }} />
+                  </div>
+                  <h3 className="text-2xl font-black text-gray-900 mb-3">Request Sent!</h3>
+                  <p className="text-gray-500 font-bold text-base px-4">The vendor will contact you shortly.</p>
+                  <button
+                    onClick={() => setIsRequestModalOpen(false)}
+                    className="mt-12 w-full h-15 bg-gray-900 text-white rounded-2xl font-black shadow-lg"
+                  >
+                    Done
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  <p className="text-[14px] text-gray-400 leading-relaxed font-semibold">
+                    Fill this form and <span className="font-extrabold text-gray-700">{vendor.name}</span> will contact you shortly. All the information provided will be treated confidentially.
+                  </p>
+
+                  <div className="space-y-7">
+                    {/* Input Groups */}
+                    <div className="relative">
+                      <label className="text-[11px] uppercase font-bold text-gray-400 mb-3 block tracking-widest px-1">Full Name</label>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full h-15 bg-gray-50/20 rounded-2xl border border-gray-100 focus:border-primary-500 focus:bg-white outline-none px-6 transition-all text-base font-bold text-gray-800 placeholder:text-gray-400"
+                        placeholder="e.g. Jai Sri Ram"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <label className="text-[11px] uppercase font-bold text-gray-400 mb-3 block tracking-widest px-1">Email Address</label>
+                      <input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="w-full h-15 bg-gray-50/20 rounded-2xl border border-gray-100 focus:border-primary-500 focus:bg-white outline-none px-6 transition-all text-base font-bold text-gray-800 placeholder:text-gray-400"
+                        placeholder="nana@na.com"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <label className="text-[11px] uppercase font-bold text-gray-400 mb-3 block tracking-widest px-1">Phone Number</label>
+                      <input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full h-15 bg-gray-50/20 rounded-2xl border border-gray-100 focus:border-primary-500 focus:bg-white outline-none px-6 transition-all text-base font-bold text-gray-800 placeholder:text-gray-400"
+                        placeholder="Your number"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <label className="text-[11px] uppercase font-bold text-gray-400 mb-3 block tracking-widest px-1">Wedding Date</label>
+                      <input
+                        type="date"
+                        value={formData.date}
+                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                        className="w-full h-15 bg-gray-50/20 rounded-2xl border border-gray-100 focus:border-primary-500 focus:bg-white outline-none px-6 transition-all text-base font-bold text-gray-800"
+                      />
+                      <div className="flex items-center gap-4 mt-5 px-1">
+                        <input
+                          type="checkbox"
+                          id="openToOtherDates"
+                          checked={formData.openToOtherDates}
+                          onChange={(e) => setFormData({ ...formData, openToOtherDates: e.target.checked })}
+                          className="w-6 h-6 rounded-md border-gray-100 text-primary-500 focus:ring-primary-500"
+                        />
+                        <label htmlFor="openToOtherDates" className="text-[15px] font-bold text-gray-600">I am open to other dates</label>
+                      </div>
+                      <button className="text-[14px] font-black text-primary-600 mt-5 px-1 hover:underline underline-offset-8">I haven't decided on a date yet</button>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] uppercase font-bold text-gray-400 mb-4 block tracking-widest px-1">Approx. Guest Count</label>
+                      <div className="grid grid-cols-4 gap-3">
+                        {['0-100', '100-200', '200-300', '300+'].map(count => (
+                          <button
+                            key={count}
+                            onClick={() => setFormData({ ...formData, guestCount: count })}
+                            className={`h-14 rounded-2xl text-[13px] font-black border-2 transition-all ${formData.guestCount === count
+                                ? 'bg-primary-50 border-primary-500 text-primary-600 shadow-md transform scale-105'
+                                : 'bg-gray-50/50 border-transparent text-gray-400'
+                              }`}
+                          >
+                            {count}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="relative">
+                      <label className="text-[11px] uppercase font-bold text-gray-400 mb-3 block tracking-widest px-1">Message for vendor</label>
+                      <textarea
+                        value={formData.message}
+                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        className="w-full bg-gray-50/20 rounded-[28px] border border-gray-100 focus:border-primary-500 focus:bg-white outline-none p-7 transition-all text-base font-bold text-gray-700 min-h-[140px] resize-none leading-relaxed"
+                        placeholder="Tell them more about your dream wedding..."
+                      />
+                    </div>
+
+                    <div className="pt-6">
+                      <button
+                        onClick={handleSendRequest}
+                        disabled={requestStatus === 'sending'}
+                        className="w-full h-18 bg-primary-600 hover:bg-primary-700 text-white rounded-[24px] font-black text-xl shadow-[0_20px_40px_-15px_rgba(225,29,72,0.4)] flex items-center justify-between px-9 transition-all active:scale-[0.95]"
+                      >
+                        {requestStatus === 'sending' ? (
+                          <div className="w-7 h-7 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
+                        ) : (
+                          <>
+                            <span className="tracking-tight">Send Request</span>
+                            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center -mr-2 shadow-inner pointer-events-none">
+                              <Icon name="send" size="xs" />
+                            </div>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

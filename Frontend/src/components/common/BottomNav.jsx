@@ -4,16 +4,33 @@ import Icon from '../ui/Icon';
 
 const BottomNav = () => {
   const { theme } = useTheme();
-  
+
+  const getHasRequirements = () => {
+    try {
+      const saved = localStorage.getItem('eventDetails');
+      if (!saved || saved === 'null' || saved === 'undefined') return false;
+      const parsed = JSON.parse(saved);
+      return parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const hasRequirements = getHasRequirements();
+
   const navItems = [
     { path: '/user/dashboard', label: 'Dashboard', iconName: 'sparkles' },
     { path: '/user/home', label: 'Home', iconName: 'home' },
-    { path: '/user/requirements', label: 'Plan', iconName: 'plan' },
+    {
+      path: hasRequirements ? '/user/planning-dashboard' : '/user/requirements',
+      label: 'Plan',
+      iconName: 'plan'
+    },
     { path: '/user/vendors', label: 'Vendors', iconName: 'vendors' },
-    { 
-      path: '/user/account', 
-      label: 'Account', 
-      iconName: 'account' 
+    {
+      path: '/user/account',
+      label: 'Account',
+      iconName: 'account'
     },
   ];
 
@@ -38,21 +55,21 @@ const BottomNav = () => {
               backgroundColor: isActive ? theme.semantic.navigation.backgroundActive : 'transparent',
             })}
             onMouseEnter={(e) => {
-              if (!e.target.classList.contains('active')) {
-                e.target.style.color = theme.semantic.text.accent;
-                e.target.style.backgroundColor = theme.semantic.navigation.backgroundHover;
+              if (!e.currentTarget.classList.contains('active')) {
+                e.currentTarget.style.color = theme.semantic.text.accent;
+                e.currentTarget.style.backgroundColor = theme.semantic.navigation.backgroundHover;
               }
             }}
             onMouseLeave={(e) => {
-              if (!e.target.classList.contains('active')) {
-                e.target.style.color = theme.semantic.navigation.text;
-                e.target.style.backgroundColor = 'transparent';
+              if (!e.currentTarget.classList.contains('active')) {
+                e.currentTarget.style.color = theme.semantic.navigation.text;
+                e.currentTarget.style.backgroundColor = 'transparent';
               }
             }}
           >
-            <Icon 
-              name={item.iconName} 
-              size="lg" 
+            <Icon
+              name={item.iconName}
+              size="lg"
               className="mb-1"
             />
             <span className="text-xs font-medium">{item.label}</span>
