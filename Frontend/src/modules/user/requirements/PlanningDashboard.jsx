@@ -3,12 +3,30 @@ import { useTheme } from '../../../hooks/useTheme';
 import Icon from '../../../components/ui/Icon';
 import Button from '../../../components/ui/Button';
 import { useState, useEffect } from 'react';
+import { useLenisContext } from '../../../providers/LenisProvider';
 
 const PlanningDashboard = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const lenis = useLenisContext();
   const [eventData, setEventData] = useState(null);
   const [planningCategories, setPlanningCategories] = useState([]);
+  const [selectedCeremony, setSelectedCeremony] = useState(null);
+
+  // Lock body scroll and stop Lenis when modal is open
+  useEffect(() => {
+    if (selectedCeremony) {
+      document.body.style.overflow = 'hidden';
+      lenis?.stop();
+    } else {
+      document.body.style.overflow = '';
+      lenis?.start();
+    }
+    return () => {
+      document.body.style.overflow = '';
+      lenis?.start();
+    };
+  }, [selectedCeremony, lenis]);
 
   // Load event data from localStorage
   useEffect(() => {
@@ -191,6 +209,11 @@ const PlanningDashboard = () => {
       birthday: 'Birthday Planning Dashboard',
       anniversary: 'Anniversary Planning Dashboard',
       corporate: 'Corporate Event Planning Dashboard',
+      baby_shower: 'Baby Shower Planning Dashboard',
+      house_warming: 'House Warming Planning Dashboard',
+      naming_ceremony: 'Naming Ceremony Planning Dashboard',
+      private_party: 'Party Planning Dashboard',
+      festival: 'Festival Celebration Dashboard',
       others: 'Event Planning Dashboard'
     };
 
@@ -228,6 +251,56 @@ const PlanningDashboard = () => {
       color: '#8b5cf6'
     }
   ];
+
+  const subcategoryEmojis = {
+    engagement: '💍',
+    mehendi: '🌿',
+    haldi: '💛',
+    sangeet: '💃',
+    wedding: '💑',
+    reception: '🎊',
+    kids_party: '🎈',
+    theme_party: '🎭',
+    milestone: '🏆',
+    surprise: '🎁',
+    dinner: '🍽️',
+    silver: '🥈',
+    golden: '🥇',
+    vow_renewal: '📜',
+    intimate_dinner: '🕯️',
+    grand_party: '✨',
+    seminar: '🎤',
+    workshop: '📝',
+    team_building: '🤝',
+    award_show: '🏅',
+    product_launch: '🚀',
+    annual_party: '🥂',
+    exhibition: '🖼️',
+    fair: '🎡',
+    religious: '🙏',
+    gathering: '👥',
+    party: '🎉',
+    godh_bharai: '🤰',
+    gender_reveal: '🎈',
+    baby_homecoming: '👶',
+    griha_pravesh: '🕉️',
+    house_party: '🏠',
+    dinner_celebration: '🍽️',
+    namkaran: '📿',
+    cradle_ceremony: '🧺',
+    lunch_party: '🥙',
+    kitty_party: '☕',
+    bachelorette: '👰',
+    bachelor_party: '🤴',
+    graduation_party: '🎓',
+    get_together: '🍻',
+    diwali_party: '🪔',
+    ganpati_celebration: '🐘',
+    holi_bash: '🎨',
+    christmas_party: '🎄',
+    eid_mubarak: '🌙',
+    new_year_eve: '🎆'
+  };
 
   const upcomingTasks = [
     { task: 'Book wedding venue', dueDate: '2 weeks left', priority: 'high' },
@@ -430,6 +503,147 @@ const PlanningDashboard = () => {
               </p>
             </div>
 
+            {/* Selected Events / Ceremonies Section */}
+            {eventData.subcategories && eventData.subcategories.length > 0 && (
+              <div className="px-4 mb-8">
+                <h2
+                  className="text-xl font-bold mb-4"
+                  style={{ color: theme.semantic.text.primary }}
+                >
+                  YOUR EVENTS
+                </h2>
+                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                  {eventData.subcategories.map((subId, index) => {
+                    const label = eventData.subcategoryLabels[index] || subId;
+                    const emoji = subcategoryEmojis[subId] || '✨';
+
+                    return (
+                      <div
+                        key={subId}
+                        className="flex flex-col items-center gap-2 p-4 rounded-3xl transition-all active:scale-95 min-w-[120px]"
+                        style={{
+                          backgroundColor: theme.semantic.card.background,
+                          border: `1px solid ${theme.semantic.card.border}`,
+                          boxShadow: `0 4px 12px ${theme.semantic.card.shadow}15`
+                        }}
+                      >
+                        <div
+                          className="w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-sm mb-1"
+                          style={{
+                            backgroundColor: `${theme.colors.primary[500]}10`,
+                            border: `2px solid ${theme.colors.primary[500]}20`
+                          }}
+                        >
+                          {emoji}
+                        </div>
+                        <span
+                          className="text-[10px] font-bold text-center uppercase tracking-wider line-clamp-1 w-full"
+                          style={{ color: theme.semantic.text.primary }}
+                        >
+                          {label}
+                        </span>
+                        <div
+                          className="h-1 w-8 rounded-full"
+                          style={{ backgroundColor: theme.colors.primary[500] }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Default Sacred Ceremonies Section if none selected for wedding */}
+            {(!eventData.subcategories || eventData.subcategories.length === 0) && eventData.category === 'wedding' && (
+              <div className="px-4 mb-8">
+                <h2
+                  className="text-xl font-bold mb-4"
+                  style={{ color: theme.semantic.text.primary }}
+                >
+                  SACRED CEREMONIES
+                </h2>
+                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                  <button
+                    onClick={() => setSelectedCeremony('roka')}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all active:scale-95 min-w-[75px]"
+                    style={{
+                      backgroundColor: theme.semantic.card.background,
+                      border: `1px solid ${theme.semantic.card.border}`,
+                      boxShadow: `0 4px 12px ${theme.semantic.card.shadow}10`
+                    }}
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm mb-0.5" style={{ backgroundColor: '#fff7ed', border: '1.5px solid #ffedd5' }}>
+                      💍
+                    </div>
+                    <span className="text-[9px] font-bold text-center uppercase tracking-wider" style={{ color: theme.semantic.text.primary }}>ROKA</span>
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedCeremony('engagement')}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all active:scale-95 min-w-[75px]"
+                    style={{
+                      backgroundColor: theme.semantic.card.background,
+                      border: `1px solid ${theme.semantic.card.border}`,
+                      boxShadow: `0 4px 12px ${theme.semantic.card.shadow}10`
+                    }}
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm mb-0.5" style={{ backgroundColor: '#fdf2f8', border: '1.5px solid #fce7f3' }}>
+                      💕
+                    </div>
+                    <span className="text-[9px] font-bold text-center uppercase tracking-wider" style={{ color: theme.semantic.text.primary }}>ENGAGEMENT</span>
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedCeremony('mehendi')}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all active:scale-95 min-w-[75px]"
+                    style={{
+                      backgroundColor: theme.semantic.card.background,
+                      border: `1px solid ${theme.semantic.card.border}`,
+                      boxShadow: `0 4px 12px ${theme.semantic.card.shadow}10`
+                    }}
+                  >
+                    <div className="relative w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm mb-0.5" style={{ backgroundColor: '#f0fdf4', border: '1.5px solid #dcfce7' }}>
+                      🌿
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-bold text-center uppercase tracking-wider" style={{ color: theme.semantic.text.primary }}>MEHENDI</span>
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedCeremony('sangeet')}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all active:scale-95 min-w-[75px]"
+                    style={{
+                      backgroundColor: theme.semantic.card.background,
+                      border: `1px solid ${theme.semantic.card.border}`,
+                      boxShadow: `0 4px 12px ${theme.semantic.card.shadow}10`
+                    }}
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm mb-0.5" style={{ backgroundColor: '#fffbe3', border: '1.5px solid #fef3c7' }}>
+                      🎵
+                    </div>
+                    <span className="text-[9px] font-bold text-center uppercase tracking-wider" style={{ color: theme.semantic.text.primary }}>SANGEET</span>
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedCeremony('haldi')}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all active:scale-95 min-w-[75px]"
+                    style={{
+                      backgroundColor: theme.semantic.card.background,
+                      border: `1px solid ${theme.semantic.card.border}`,
+                      boxShadow: `0 4px 12px ${theme.semantic.card.shadow}10`
+                    }}
+                  >
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-sm mb-0.5" style={{ backgroundColor: '#fefce8', border: '1.5px solid #fef08a' }}>
+                      💛
+                    </div>
+                    <span className="text-[9px] font-bold text-center uppercase tracking-wider" style={{ color: theme.semantic.text.primary }}>HALDI</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Upcoming Tasks */}
             <div className="px-4 mb-8">
               <h2
@@ -537,6 +751,201 @@ const PlanningDashboard = () => {
           <span className="text-sm">CHECK LIST</span>
         </button>
       </div>
+
+      {/* Ceremony Detail Modal */}
+      {(selectedCeremony === 'roka' || selectedCeremony === 'engagement' || selectedCeremony === 'mehendi' || selectedCeremony === 'sangeet' || selectedCeremony === 'haldi') && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center px-0 pb-0">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setSelectedCeremony(null)} />
+          <div
+            className="relative w-full max-w-lg bg-white rounded-t-[40px] overflow-hidden shadow-2xl transition-transform duration-500 ease-out transform translate-y-0"
+            style={{ backgroundColor: theme.semantic.background.primary }}
+          >
+            {/* Header / Pull bar */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full bg-gray-200" />
+
+            <div
+              className="p-8 pt-10 max-h-[90vh] overflow-y-auto"
+              data-lenis-prevent
+            >
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h2 className="text-3xl font-black mb-1" style={{ color: theme.semantic.text.primary }}>
+                    {selectedCeremony === 'roka' ? '💍 Roka Ceremony' :
+                      selectedCeremony === 'engagement' ? '💕 Engagement Ceremony' :
+                        selectedCeremony === 'mehendi' ? '🌿 Mehendi Ceremony' :
+                          selectedCeremony === 'sangeet' ? '🎵 Sangeet Night' : '💛 Haldi Ceremony'}
+                  </h2>
+                  <p className="text-sm font-medium" style={{ color: theme.colors.primary[500] }}>
+                    {selectedCeremony === 'roka' ? 'A Sacred Commitment' :
+                      selectedCeremony === 'engagement' ? 'A Public Declaration of Love' :
+                        selectedCeremony === 'mehendi' ? 'Artistic Love & Tradition' :
+                          selectedCeremony === 'sangeet' ? 'Musical Celebration of Joy' : 'Purification & Blessings'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedCeremony(null)}
+                  className="p-2.5 rounded-full transition-colors hover:bg-gray-100"
+                  style={{ backgroundColor: theme.semantic.background.accent }}
+                >
+                  <Icon name="close" size="sm" style={{ color: theme.semantic.text.primary }} />
+                </button>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-3 mb-8">
+                <div className="p-4 rounded-[24px] bg-indigo-50 border border-indigo-100/50 flex flex-col items-center">
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-xl mb-2 shadow-sm">👥</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1">Who</div>
+                  <div className="text-[11px] font-bold text-indigo-900 leading-tight text-center">
+                    {selectedCeremony === 'roka' ? 'Close families' :
+                      selectedCeremony === 'engagement' ? 'Full Guest List' :
+                        selectedCeremony === 'mehendi' ? 'Ladies & Family' :
+                          selectedCeremony === 'sangeet' ? 'Both Families' : 'Extended Family'}
+                  </div>
+                </div>
+                <div className="p-4 rounded-[24px] bg-rose-50 border border-rose-100/50 flex flex-col items-center">
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-xl mb-2 shadow-sm">📅</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-rose-400 mb-1">When</div>
+                  <div className="text-[11px] font-bold text-rose-900 leading-tight text-center">
+                    {selectedCeremony === 'roka' ? '6-12 mos' :
+                      selectedCeremony === 'engagement' ? '8 Weeks Before' :
+                        selectedCeremony === 'mehendi' ? '1-2 Days Before' :
+                          selectedCeremony === 'sangeet' ? '1-2 Days Before' : 'Day of Wedding (Morning)'}
+                  </div>
+                </div>
+                <div className="p-4 rounded-[24px] bg-emerald-50 border border-emerald-100/50 flex flex-col items-center">
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-xl mb-2 shadow-sm">💰</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-1">Budget</div>
+                  <div className="text-[11px] font-bold text-emerald-900 leading-tight text-center">
+                    {selectedCeremony === 'roka' ? '₹50k - 1.5L' :
+                      selectedCeremony === 'engagement' ? '₹1.5L - 5L' :
+                        selectedCeremony === 'mehendi' ? '₹20k - 1L' :
+                          selectedCeremony === 'sangeet' ? '₹1L - 3.5L' : '₹15k - 60k'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-8 p-5 rounded-3xl" style={{ backgroundColor: theme.colors.primary[50] }}>
+                <h3 className="text-base font-black mb-2 flex items-center gap-2" style={{ color: theme.colors.primary[700] }}>
+                  {selectedCeremony === 'roka' ? '❤️ The Essence' :
+                    selectedCeremony === 'engagement' ? '💍 The Essence' :
+                      selectedCeremony === 'mehendi' ? '🌿 The Essence' :
+                        selectedCeremony === 'sangeet' ? '🎸 The Essence' : '✨ The Essence'}
+                </h3>
+                <p className="text-sm leading-relaxed font-medium" style={{ color: theme.colors.primary[800] }}>
+                  {selectedCeremony === 'roka' ? 'This is when both families officially say "yes" to the union. It\'s the formal handshake that makes everything real.' :
+                    selectedCeremony === 'engagement' ? 'This is your public declaration of love and commitment. The rings you exchange symbolize the endless circle of your bond.' :
+                      selectedCeremony === 'mehendi' ? 'Mehendi represents the bond between you and your partner. The deeper the color, the stronger the love — at least that\'s what the aunties will tell you!' :
+                        selectedCeremony === 'sangeet' ? 'Pure joy in musical form. Both families come together to celebrate through dance, laughter, and maybe a few tears of happiness.' :
+                          'Haldi purifies and blesses you before your big day. Plus, it\'s believed to give you that natural glow — though you\'ll definitely need a good scrub afterward!'}
+                </p>
+              </div>
+
+              <div className="mb-8">
+                <h3 className="text-xl font-black mb-4 px-1" style={{ color: theme.semantic.text.primary }}>
+                  {selectedCeremony === 'haldi' ? '☀️ Haldi Essentials' :
+                    selectedCeremony === 'sangeet' ? '💃 Typical Sangeet Flow' : '🔱 Process & Steps'}
+                </h3>
+                <div className="space-y-4">
+                  {(selectedCeremony === 'roka' ? [
+                    { title: 'Ganesh Puja', desc: 'seeking blessings for a smooth journey' },
+                    { title: 'Tilak ceremony', desc: 'the groom receives the sacred mark of acceptance' },
+                    { title: 'Gift exchange', desc: 'families share sweets, clothes, and jewelry' },
+                    { title: 'Ring exchange', desc: "if you're ready for this step" }
+                  ] : selectedCeremony === 'engagement' ? [
+                    { title: 'Ring Selection', desc: 'Select and purchase engagement rings' },
+                    { title: 'Venue & Menu', desc: 'Book venue and finalize catering menu' },
+                    { title: 'Invitations', desc: 'Design and send digital or print invitations' },
+                    { title: 'Theme Decor', desc: 'Plan decoration theme and color scheme' }
+                  ] : selectedCeremony === 'mehendi' ? [
+                    { title: 'Artist Booking', desc: 'Book mehendi artists 6-8 weeks in advance' },
+                    { title: 'Seating Setup', desc: 'Arrange cushions and low tables for comfort' },
+                    { title: 'Menu Planning', desc: 'Plan light refreshments: samosas, chai, juices' },
+                    { title: 'Drying Station', desc: 'Set up mehendi drying area with fans' }
+                  ] : selectedCeremony === 'sangeet' ? [
+                    { title: "Grand Entry", desc: "Welcome & couple's entry — make it grand!" },
+                    { title: "Introductions", desc: "Family introductions — let everyone mingle" },
+                    { title: "Bride's Side Dances", desc: "Performances by bride's side — usually 3-4 dances" },
+                    { title: "Couple's Special", desc: "Your moment to shine on the stage" }
+                  ] : [
+                    { title: 'Haldi Paste', desc: 'Prepare: turmeric + rose water + milk + honey' },
+                    { title: 'Venue Setup', desc: 'Set up outdoor space or easily cleanable area' },
+                    { title: 'Dress Code', desc: 'Arrange old clothes or yellow attire for all' },
+                    { title: 'Wash Facilities', desc: 'Set up washing facilities nearby' }
+                  ]).map((item, i) => (
+                    <div key={i} className="flex items-start gap-4 group">
+                      <div className="w-2 h-2 rounded-full bg-pink-500 mt-2 flex-shrink-0 shadow-[0_0_8px_rgba(236,72,153,0.5)]" />
+                      <div>
+                        <span className="font-black text-sm block" style={{ color: theme.semantic.text.primary }}>{item.title}</span>
+                        <span className="text-sm font-medium" style={{ color: theme.semantic.text.secondary }}>{item.desc}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-8">
+                <h3 className="text-xl font-black mb-4 px-1" style={{ color: theme.semantic.text.primary }}>
+                  {selectedCeremony === 'haldi' ? '✅ Ceremony Checklist' :
+                    selectedCeremony === 'sangeet' ? '🎸 Performance Checklist' : '✅ Checklist'}
+                </h3>
+                <div className="space-y-3">
+                  {(selectedCeremony === 'roka' ? [
+                    'Book Pandit ji (if doing formal puja)',
+                    'Arrange puja items: mithai, flowers',
+                    'Purchase gifts for both families',
+                    'Plan simple catering',
+                    'Book photographer'
+                  ] : selectedCeremony === 'engagement' ? [
+                    'Arrange entertainment (DJ/live music)',
+                    'Select outfits for couple & coordinate colors',
+                    'Plan traditional gift exchange',
+                    'Finalize guest RSVPs',
+                    'Confirm vendor arrival times'
+                  ] : selectedCeremony === 'mehendi' ? [
+                    'Prepare mehendi favor boxes for guests',
+                    'Arrange dhol player or playlist',
+                    'Plan cleanup crew and supplies',
+                    'Finalize mehendi designs for bride',
+                    'Organize guest list'
+                  ] : selectedCeremony === 'sangeet' ? [
+                    'Hire a professional Choreographer',
+                    'MC / Host booking for stage management',
+                    'Finalize dance playlist with DJ',
+                    'Schedule rehearsals for both families',
+                    'Open dance floor segment planning'
+                  ] : [
+                    'Plan yellow-themed decorations',
+                    'Arrange traditional breakfast after ceremony',
+                    'Stock up on towels and cleaning supplies',
+                    'Prepare floral jewelry for bride',
+                    'Coordinate music for entry'
+                  ]).map((item, i) => (
+                    <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100 transition-all hover:border-pink-100 hover:bg-pink-50/30 group">
+                      <div className="w-6 h-6 rounded-lg border-2 border-pink-200 flex items-center justify-center bg-white transition-colors group-hover:border-pink-400">
+                        <div className="w-2.5 h-2.5 rounded-sm bg-pink-500 opacity-0 transition-opacity group-hover:opacity-20" />
+                      </div>
+                      <span className="text-sm font-bold" style={{ color: theme.semantic.text.primary }}>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Button
+                onClick={() => setSelectedCeremony(null)}
+                className="w-full py-4 rounded-2xl text-base font-black shadow-xl"
+                style={{
+                  background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+                  color: 'white',
+                  boxShadow: '0 10px 20px -5px rgba(236, 72, 153, 0.4)'
+                }}
+              >
+                GOT IT
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

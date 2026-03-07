@@ -21,21 +21,20 @@ const CartIcon = ({ className = '' }) => {
       }}
       aria-label={`Cart with ${cartState.totalItems} items`}
     >
-      <Icon 
-        name="cart" 
-        size="md" 
-        style={{ 
-          color: cartState.totalItems > 0 ? theme.colors.primary[600] : theme.semantic.text.secondary 
-        }} 
+      <Icon
+        name="bag"
+        size="md"
+        style={{
+          color: cartState.totalItems > 0 ? theme.colors.primary[600] : theme.semantic.text.secondary
+        }}
       />
-      
+
       {/* Cart Badge */}
       {cartState.totalItems > 0 && (
         <div
-          className="absolute -top-1 -right-1 min-w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
+          className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm border border-white"
           style={{
             backgroundColor: theme.colors.primary[500],
-            minWidth: '20px'
           }}
         >
           {cartState.totalItems > 99 ? '99+' : cartState.totalItems}
